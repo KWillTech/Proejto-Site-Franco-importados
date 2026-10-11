@@ -5,7 +5,7 @@ export const WHOLESALE_MIN_PIECES = 10;
 const brl = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 
 export function formatBRL(cents: number): string {
-  return brl.format(cents / 100).replace(/ /g, ' ');
+  return brl.format(cents / 100).replace(/\u00a0/g, ' ');
 }
 
 export function pixCents(cents: number, pixPercent: number | null): number {
