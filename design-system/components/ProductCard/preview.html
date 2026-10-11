@@ -1,0 +1,12 @@
+<!-- @dsCard group="Comércio" height=520 -->
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>ProductCard — preview</title></head>
+<body>
+<div id="root" class="fi-row" style="align-items:flex-start"></div>
+<script>
+  var F = window.Franco, h = React.createElement;
+  ReactDOM.createRoot(document.getElementById('root')).render(h('div', { style: { display:'grid', gridTemplateColumns:'repeat(3, minmax(0, 1fr))', gap:24, width:'100%' } }, h(F.ProductCard, { brand: 'Importado · Itália', name: 'Jogo de taças de cristal, 6 peças', price: 459.9, installments: 5, badge: 'Novo', onAdd: function(){} }), h(F.ProductCard, { brand: 'Importado · Portugal', name: 'Manta de lã merino 1,50 × 2,00 m', price: 899.9, compareAt: 1149.9, installments: 10, onAdd: function(){} }), h(F.ProductCard, { brand: 'Importado · Japão', name: 'Faca de chef em aço damasco 20 cm', price: 1299.9, installments: 10, badge: 'Últimas unidades', badgeTone: 'warning' })));
+</script>
+</body>
+</html>

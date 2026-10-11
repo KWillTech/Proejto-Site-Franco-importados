@@ -1,0 +1,12 @@
+<!-- @dsCard group="Ações" height=96 -->
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Button — preview</title></head>
+<body>
+<div id="root" class="fi-row"></div>
+<script>
+  var F = window.Franco, h = React.createElement;
+  ReactDOM.createRoot(document.getElementById('root')).render(h(React.Fragment, null, h(F.Button, null, 'Adicionar à sacola'), h(F.Button, { variant: 'secondary' }, 'Ver detalhes'), h(F.Button, { variant: 'ghost', iconRight: 'seta-direita' }, 'Ver todos'), h(F.Button, { size: 'sm', icon: 'conversa' }, 'Falar no atendimento'), h(F.Button, { disabled: true }, 'Esgotado')));
+</script>
+</body>
+</html>

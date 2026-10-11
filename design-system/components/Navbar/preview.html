@@ -1,0 +1,12 @@
+<!-- @dsCard group="Navegação" height=150 -->
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Navbar — preview</title></head>
+<body>
+<div id="root" class="" style="padding:0"></div>
+<script>
+  var F = window.Franco, h = React.createElement;
+  ReactDOM.createRoot(document.getElementById('root')).render(h('div', { style: { width:'100%' } }, h(F.Navbar, { announcement: 'Frete grátis acima de R$ 299 · Atacado com preço especial', links: [{ label: 'Novidades', current: true }, { label: 'Casa' }, { label: 'Cozinha' }, { label: 'Atacado' }], cartCount: 2 })));
+</script>
+</body>
+</html>

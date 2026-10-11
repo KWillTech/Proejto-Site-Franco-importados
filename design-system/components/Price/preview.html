@@ -1,0 +1,12 @@
+<!-- @dsCard group="Comércio" height=120 -->
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Price — preview</title></head>
+<body>
+<div id="root" class="fi-row" style="gap:48px;align-items:flex-start"></div>
+<script>
+  var F = window.Franco, h = React.createElement;
+  ReactDOM.createRoot(document.getElementById('root')).render(h(React.Fragment, null, h(F.Price, { value: 1299.9, installments: 10, pix: 5 }), h(F.Price, { value: 899.9, compareAt: 1149.9, installments: 6 })));
+</script>
+</body>
+</html>
