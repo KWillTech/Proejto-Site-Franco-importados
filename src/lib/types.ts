@@ -1,0 +1,17 @@
+export type Channel = 'varejo' | 'atacado';
+
+export type CartLine = {
+  variantId: string; productId: string; slug: string; name: string;
+  optionLabel: string;            // "Azul, 256GB" ou ""
+  image: string | null;
+  retailCents: number; wholesaleCents: number;
+  pixPercent: number | null; installments: number | null;
+  qty: number;
+};
+
+export type PricedLine = CartLine & { unitCents: number; subtotalCents: number; subtotalPixCents: number };
+
+export type CartSummary = {
+  channel: Channel; pieces: number; missingForWholesale: number;
+  lines: PricedLine[]; totalCents: number; totalPixCents: number;
+};
