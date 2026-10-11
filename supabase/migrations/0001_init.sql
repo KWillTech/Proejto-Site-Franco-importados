@@ -1,6 +1,8 @@
 -- Franco Importados: esquema inicial.
 -- Rode inteiro no SQL Editor do Supabase (depois rode supabase/seed.sql).
 
+begin;
+
 create extension if not exists pgcrypto;
 
 -- ---------- tabelas ----------
@@ -71,6 +73,13 @@ insert into public.settings (id, whatsapp_number, topbar_text)
 values (1, '5500000000000', '10% OFF no Pix em todo o site')
 on conflict (id) do nothing;
 
+-- ---------- privilégios explícitos (não dependem dos padrões do projeto) ----------
+grant usage on schema public to anon, authenticated;
+grant select on public.categories, public.products, public.product_images, public.variants, public.banners, public.settings to anon, authenticated;
+grant insert, update, delete on public.categories, public.products, public.product_images, public.variants, public.banners to authenticated;
+-- settings é uma linha única: pode ser lida e editada, nunca criada nem apagada pelo painel.
+grant update on public.settings to authenticated;
+
 -- ---------- RLS: leitura pública, escrita só para quem está logado ----------
 alter table public.categories enable row level security;
 alter table public.products enable row level security;
@@ -105,9 +114,7 @@ create policy "banners_update" on public.banners for update to authenticated usi
 create policy "banners_delete" on public.banners for delete to authenticated using (true);
 
 create policy "settings_select" on public.settings for select to anon, authenticated using (true);
-create policy "settings_insert" on public.settings for insert to authenticated with check (id = 1);
 create policy "settings_update" on public.settings for update to authenticated using (true) with check (id = 1);
-create policy "settings_delete" on public.settings for delete to authenticated using (true);
 
 -- ---------- Storage: bucket público "media" ----------
 insert into storage.buckets (id, name, public)
@@ -118,3 +125,5 @@ create policy "media_select" on storage.objects for select to anon, authenticate
 create policy "media_insert" on storage.objects for insert to authenticated with check (bucket_id = 'media');
 create policy "media_update" on storage.objects for update to authenticated using (bucket_id = 'media') with check (bucket_id = 'media');
 create policy "media_delete" on storage.objects for delete to authenticated using (bucket_id = 'media');
+
+commit;

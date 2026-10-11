@@ -1,5 +1,7 @@
--- Dados de exemplo (fictícios). Rode DEPOIS de 0001_init.sql, no SQL Editor do Supabase.
--- Pode ser executado de novo: limpa o catálogo e recria. Não mexe em "settings".
+-- ATENÇÃO: ESTE SCRIPT APAGA TODO O CATÁLOGO (categorias, produtos, variações,
+-- imagens e banners) antes de inserir os dados de exemplo (fictícios).
+-- Use SOMENTE na configuração inicial, nunca depois que a loja tiver dados reais.
+-- Rode DEPOIS de 0001_init.sql, no SQL Editor do Supabase. Não mexe em "settings".
 
 begin;
 
@@ -32,7 +34,7 @@ from (values
   ('perfumes-arabes', 'Lattafa Asad EDP 100ml', 'lattafa-asad-edp-100ml', 'Lattafa Asad EDP 100ml. Produto de exemplo — original e lacrado.', true, true, null::text, 10::numeric, null::int, array[]::text[], 9),
   ('perfumes-arabes', 'Al Haramain Amber Oud Gold 120ml', 'al-haramain-amber-oud-gold-120ml', 'Al Haramain Amber Oud Gold 120ml. Produto de exemplo — original e lacrado.', true, true, '10% OFF', 10::numeric, null::int, array[]::text[], 10),
   ('perfumes-importados', 'Armaf Club de Nuit Intense 105ml', 'armaf-club-de-nuit-intense-105ml', 'Armaf Club de Nuit Intense 105ml. Produto de exemplo — original e lacrado.', false, true, null::text, 10::numeric, null::int, array[]::text[], 11),
-  ('perfumes-arabes', 'Lattafa Yara EDP 100ml', 'lattafa-yara-edp-100ml', 'Lattafa Yara EDP 100ml. Produto de exemplo — original e lacrado.', true, true, null::text, 10::numeric, null::int, array['Tamanho']::text[], 12),
+  ('perfumes-arabes', 'Lattafa Yara EDP', 'lattafa-yara-edp', 'Lattafa Yara EDP. Produto de exemplo — original e lacrado.', true, true, null::text, 10::numeric, null::int, array['Tamanho']::text[], 12),
   ('perfumes-arabes', 'Afnan 9PM EDP 100ml', 'afnan-9pm-edp-100ml', 'Afnan 9PM EDP 100ml. Produto de exemplo — original e lacrado.', false, true, null::text, 10::numeric, null::int, array[]::text[], 13),
   ('perfumes-importados', 'Rasasi Hawas for Him 100ml', 'rasasi-hawas-for-him-100ml', 'Rasasi Hawas for Him 100ml. Produto de exemplo — original e lacrado.', false, true, 'FRETE GRÁTIS', 10::numeric, null::int, array[]::text[], 14),
   ('perfumes-importados', 'Maison Alhambra Jean Lowe 100ml', 'maison-alhambra-jean-lowe-100ml', 'Maison Alhambra Jean Lowe 100ml. Produto de exemplo — original e lacrado.', false, true, null::text, 10::numeric, null::int, array[]::text[], 15)
@@ -57,7 +59,7 @@ from (values
   ('lattafa-asad-edp-100ml', '/placeholders/perfume-black.svg', 1),
   ('al-haramain-amber-oud-gold-120ml', '/placeholders/perfume-gold.svg', 1),
   ('armaf-club-de-nuit-intense-105ml', '/placeholders/perfume-graphite.svg', 1),
-  ('lattafa-yara-edp-100ml', '/placeholders/perfume-rose.svg', 1),
+  ('lattafa-yara-edp', '/placeholders/perfume-rose.svg', 1),
   ('afnan-9pm-edp-100ml', '/placeholders/perfume-navy.svg', 1),
   ('rasasi-hawas-for-him-100ml', '/placeholders/perfume-sky.svg', 1),
   ('maison-alhambra-jean-lowe-100ml', '/placeholders/perfume-wine.svg', 1)
@@ -68,13 +70,13 @@ insert into public.variants (product_id, option_values, retail_cents, wholesale_
 select p.id, v.option_values, v.retail_cents, v.wholesale_cents, v.available, v.position
 from (values
   ('iphone-17-pro', array['Azul', '256GB']::text[], 967072, 899000, true, 1),
-  ('iphone-17-pro', array['Azul', '512GB']::text[], 968572, 900400, true, 2),
+  ('iphone-17-pro', array['Azul', '512GB']::text[], 1117072, 1039000, true, 2),
   ('iphone-17-pro', array['Prata', '256GB']::text[], 967072, 899000, true, 3),
-  ('iphone-17-pro', array['Prata', '512GB']::text[], 968572, 900400, true, 4),
+  ('iphone-17-pro', array['Prata', '512GB']::text[], 1117072, 1039000, true, 4),
   ('iphone-17-pro-max', array['Vinho', '256GB']::text[], 1053599, 979000, true, 1),
-  ('iphone-17-pro-max', array['Vinho', '512GB']::text[], 1055099, 980400, true, 2),
+  ('iphone-17-pro-max', array['Vinho', '512GB']::text[], 1203599, 1119000, true, 2),
   ('iphone-17-pro-max', array['Preto', '256GB']::text[], 1053599, 979000, true, 3),
-  ('iphone-17-pro-max', array['Preto', '512GB']::text[], 1055099, 980400, true, 4),
+  ('iphone-17-pro-max', array['Preto', '512GB']::text[], 1203599, 1119000, true, 4),
   ('macbook-air-m4-13', array[]::text[], 899990, 835000, true, 1),
   ('playstation-5-slim', array[]::text[], 379990, 339000, true, 1),
   ('xiaomi-15-ultra-512gb', array[]::text[], 642991, 589000, true, 1),
@@ -86,8 +88,8 @@ from (values
   ('lattafa-asad-edp-100ml', array[]::text[], 28990, 17990, true, 1),
   ('al-haramain-amber-oud-gold-120ml', array[]::text[], 59990, 42990, true, 1),
   ('armaf-club-de-nuit-intense-105ml', array[]::text[], 37990, 25990, true, 1),
-  ('lattafa-yara-edp-100ml', array['30 ml']::text[], 15990, 8990, true, 1),
-  ('lattafa-yara-edp-100ml', array['100 ml']::text[], 27990, 16990, true, 2),
+  ('lattafa-yara-edp', array['30ml']::text[], 15990, 8990, true, 1),
+  ('lattafa-yara-edp', array['100ml']::text[], 27990, 16990, true, 2),
   ('afnan-9pm-edp-100ml', array[]::text[], 32990, 20990, true, 1),
   ('rasasi-hawas-for-him-100ml', array[]::text[], 45990, 31990, true, 1),
   ('maison-alhambra-jean-lowe-100ml', array[]::text[], 25990, 15990, true, 1)
