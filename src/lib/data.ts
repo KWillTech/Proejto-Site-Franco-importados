@@ -30,7 +30,7 @@ type CategoryRow = {
   home_card_image: string | null; home_card_tag: string | null;
 };
 
-const PRODUCT_SELECT =
+export const PRODUCT_SELECT =
   'id, slug, name, description, featured, available, badge, pix_percent, installments, option_names, ' +
   'categories(slug), product_images(url, position), ' +
   'variants(id, option_values, retail_cents, wholesale_cents, available, position)';

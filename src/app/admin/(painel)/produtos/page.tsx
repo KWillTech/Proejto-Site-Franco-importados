@@ -1,17 +1,13 @@
 import Link from 'next/link';
 import { Toggle } from '@/components/admin/Toggle';
 import { requireUser } from '@/lib/auth';
+import { fromPrices, mapProduct, PRODUCT_SELECT, type ProductRow } from '@/lib/data';
 import { formatBRL } from '@/lib/pricing';
 import { createClient } from '@/lib/supabase/server';
 import styles from '../../admin.module.css';
 import { setAvailable, setFeatured } from './actions';
 
-type Row = {
-  id: string; name: string; featured: boolean; available: boolean;
-  categories: { name: string } | null;
-  product_images: Array<{ url: string; position: number }>;
-  variants: Array<{ retail_cents: number }>;
-};
+type Row = ProductRow & { category: { name: string } | null };
 
 // Painel lê a sessão a cada requisição: bloqueia no servidor em vez de mostrar um esqueleto.
 export const instant = false;
@@ -25,7 +21,7 @@ export default async function ProdutosPage({ searchParams }: PageProps<'/admin/p
 
   const supabase = await createClient();
   let query = supabase.from('products')
-    .select('id, name, featured, available, categories(name), product_images(url, position), variants(retail_cents)')
+    .select(`${PRODUCT_SELECT}, category:categories(name)`)
     .order('name');
   if (term) query = query.ilike('name', `%${term}%`);
   const { data, error } = await query.overrideTypes<Row[], { merge: false }>();
@@ -45,9 +41,11 @@ export default async function ProdutosPage({ searchParams }: PageProps<'/admin/p
         <p>{term ? 'Nenhum produto encontrado.' : 'Nenhum produto cadastrado ainda.'}</p>
       ) : (
         <ul className={styles.list}>
-          {data.map((p) => {
-            const thumb = [...p.product_images].sort((a, b) => a.position - b.position)[0]?.url;
-            const prices = p.variants.map((v) => v.retail_cents);
+          {data.map((row) => {
+            const p = mapProduct(row);
+            const thumb = p.images[0];
+            // Mesma regra da vitrine: variações esgotadas não entram no "a partir de".
+            const from = fromPrices(p);
             return (
               <li className={styles.item} key={p.id}>
                 {thumb ? (
@@ -59,7 +57,7 @@ export default async function ProdutosPage({ searchParams }: PageProps<'/admin/p
                 <div className={styles.info}>
                   <Link href={`/admin/produtos/${p.id}`}>{p.name}</Link>
                   <span className={styles.muted}>
-                    {p.categories?.name ?? 'Sem categoria'} · {prices.length ? `a partir de ${formatBRL(Math.min(...prices))}` : 'sem preço'}
+                    {row.category?.name ?? 'Sem categoria'} · {from ? `a partir de ${formatBRL(from.retailCents)}` : 'variações esgotadas'}
                   </span>
                 </div>
                 <div className={styles.toggles}>

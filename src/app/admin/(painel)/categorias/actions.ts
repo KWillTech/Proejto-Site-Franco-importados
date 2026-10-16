@@ -2,17 +2,14 @@
 
 import { revalidatePath } from 'next/cache';
 import { requireUser } from '@/lib/auth';
-import { UUID } from '@/lib/cart';
 import { createClient } from '@/lib/supabase/server';
-import { categorySchema, fieldErrors, slugify, uniqueSlug } from '@/lib/validation';
+import { categorySchema, fieldErrors, isId, SAVE_FAILED, slugify, uniqueSlug } from '@/lib/validation';
 
 type Result = { ok: true } | { ok: false; errors: Record<string, string> };
 
 const fail = (message: string, key = 'form'): Result => ({ ok: false, errors: { [key]: message } });
-const SAVE_FAILED = fail('Não foi possível salvar. Tente de novo.');
 const DELETE_FAILED = fail('Não foi possível excluir. Tente de novo.');
 const HAS_PRODUCTS = fail('Mova ou exclua os produtos desta categoria antes.');
-const isId = (id: unknown): id is string => typeof id === 'string' && UUID.test(id);
 const done = (): Result => {
   revalidatePath('/', 'layout'); // menu, home e categorias da vitrine
   return { ok: true };

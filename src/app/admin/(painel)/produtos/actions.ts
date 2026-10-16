@@ -2,15 +2,12 @@
 
 import { revalidatePath } from 'next/cache';
 import { requireUser } from '@/lib/auth';
-import { UUID } from '@/lib/cart';
 import { createClient } from '@/lib/supabase/server';
-import { fieldErrors, productSchema, slugify, uniqueSlug } from '@/lib/validation';
+import { fieldErrors, isId, productSchema, SAVE_FAILED, slugify, uniqueSlug } from '@/lib/validation';
 
 type Result = { ok: true; id: string } | { ok: false; errors: Record<string, string> };
 type SlugRow = { slug: string; categories: { slug: string } | null };
 
-const SAVE_FAILED: Result = { ok: false, errors: { form: 'Não foi possível salvar. Tente de novo.' } };
-const isId = (id: unknown): id is string => typeof id === 'string' && UUID.test(id);
 
 function checkId(id: unknown): asserts id is string {
   if (!isId(id)) throw new Error('Produto inválido.');

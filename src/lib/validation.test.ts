@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bannerSchema, categorySchema, parseMoney, productSchema, settingsSchema, slugify, uniqueSlug, validateImageFile } from './validation';
+import { bannerSchema, categorySchema, isId, parseMoney, productSchema, settingsSchema, slugify, uniqueSlug, validateImageFile } from './validation';
 
 const CAT = '0b6c4a2e-1f3d-4c5b-9a8e-7d6f5e4c3b2a';
 const base = {
@@ -179,5 +179,15 @@ describe('bannerSchema', () => {
     for (const link of ['//evil.com', '/\\evil.com', 'javascript:alert(1)', 'loja.com']) {
       expect(msgs(bannerSchema, { ...ok, link })).toEqual({ link: 'Use um caminho como /categoria/perfumes ou um endereço http(s).' });
     }
+  });
+});
+
+describe('isId', () => {
+  it('aceita só UUID em string', () => {
+    expect(isId(CAT)).toBe(true);
+    expect(isId(CAT.toUpperCase())).toBe(true);
+    expect(isId(`${CAT}x`)).toBe(false);
+    expect(isId('1')).toBe(false);
+    expect(isId(null)).toBe(false);
   });
 });

@@ -2,15 +2,12 @@
 
 import { revalidatePath } from 'next/cache';
 import { requireUser } from '@/lib/auth';
-import { UUID } from '@/lib/cart';
 import { createClient } from '@/lib/supabase/server';
-import { bannerSchema, fieldErrors } from '@/lib/validation';
+import { bannerSchema, fieldErrors, isId, SAVE_FAILED } from '@/lib/validation';
 
 type Result = { ok: true } | { ok: false; errors: Record<string, string> };
 
 const fail = (message: string): Result => ({ ok: false, errors: { form: message } });
-const SAVE_FAILED = fail('Não foi possível salvar. Tente de novo.');
-const isId = (id: unknown): id is string => typeof id === 'string' && UUID.test(id);
 const done = (): Result => {
   revalidatePath('/', 'layout'); // o slider está na home
   return { ok: true };

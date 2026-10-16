@@ -11,6 +11,10 @@ export type ProductInput = {
   images: string[];
 };
 
+export const isId = (id: unknown): id is string => typeof id === 'string' && UUID.test(id);
+/** Falha genérica de gravação, no formato de erro que os formulários do painel mostram. */
+export const SAVE_FAILED = { ok: false, errors: { form: 'Não foi possível salvar. Tente de novo.' } } as const;
+
 const PIX_MSG = 'O desconto no Pix deve ser maior que 0% e no máximo 100%.';
 const INSTALLMENTS_MSG = 'As parcelas devem ser um número inteiro de 1 a 24.';
 const PRICE_MSG = 'Informe um preço válido.';
