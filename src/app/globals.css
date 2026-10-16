@@ -33,6 +33,12 @@ button {
   margin: 0 auto;
   padding: 0 15px;
 }
+.page-main {
+  padding: 32px 0;
+}
+.center {
+  text-align: center;
+}
 .sec-title {
   font-size: 34px;
   font-weight: 700;

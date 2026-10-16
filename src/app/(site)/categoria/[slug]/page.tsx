@@ -17,16 +17,17 @@ export async function generateStaticParams() {
 export default async function CategoryPage({ params }: PageProps<'/categoria/[slug]'>) {
   const { slug } = await params;
   const data = await loadCategory(slug);
+  // shortcut: slug fora do generateStaticParams responde 200 com noindex (notFound depois do shell em streaming), trocar por checagem em src/proxy.ts se o SEO exigir 404 real
   if (!data) notFound();
   return (
-    <main style={{ padding: '32px 0' }}>
+    <main className="page-main">
       <section className="container">
         <h1 className="sec-title">{data.category.name}</h1>
         <ChannelToggle />
         {data.products.length ? (
           <ProductGrid products={data.products} />
         ) : (
-          <p style={{ textAlign: 'center' }}>Ainda não há produtos nesta categoria.</p>
+          <p className="center">Ainda não há produtos nesta categoria.</p>
         )}
       </section>
     </main>
