@@ -5,16 +5,19 @@ import type { Channel } from '@/lib/types';
 
 const KEY = 'franco.channel';
 const listeners = new Set<() => void>();
+// Memória de fallback quando o sessionStorage está bloqueado.
+let mem: Channel = 'varejo';
 
 function read(): Channel {
   try {
     return sessionStorage.getItem(KEY) === 'atacado' ? 'atacado' : 'varejo';
   } catch {
-    return 'varejo';
+    return mem;
   }
 }
 
 function write(c: Channel) {
+  mem = c;
   try {
     sessionStorage.setItem(KEY, c);
   } catch {}
