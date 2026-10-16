@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { ChannelProvider } from '@/components/site/ChannelProvider';
 import { Footer } from '@/components/site/Footer';
 import { Header } from '@/components/site/Header';
 import { MobileMenu } from '@/components/site/MobileMenu';
@@ -20,7 +21,7 @@ async function Shell({ children }: { children: ReactNode }) {
       <Header whatsappHref={whatsappHref} cartCount={0} />
       <Nav categories={categories} />
       <MobileMenu categories={categories} />
-      {children}
+      <ChannelProvider>{children}</ChannelProvider>
       <Footer phone={phone} whatsappHref={whatsappHref} />
       {whatsappHref && <WhatsAppFloat href={whatsappHref} />}
     </>

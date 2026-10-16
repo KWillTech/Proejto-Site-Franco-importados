@@ -1,0 +1,30 @@
+.channel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: -8px 0 34px;
+}
+.pills {
+  display: flex;
+  gap: 8px;
+}
+.pills button {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 10px 26px;
+  border-radius: 40px;
+  border: 0.8px solid var(--navy);
+  background: #fff;
+  color: var(--navy);
+}
+.pills button.on {
+  background: var(--navy);
+  color: #fff;
+}
+.channel p {
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: #555;
+}
