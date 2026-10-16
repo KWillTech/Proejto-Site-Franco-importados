@@ -77,3 +77,15 @@
     gap: 40px;
   }
 }
+
+.added {
+  margin: 0;
+}
+.added:not(:empty) {
+  margin-bottom: 20px;
+}
+.added a {
+  color: var(--navy);
+  font-weight: 700;
+  text-decoration: underline;
+}

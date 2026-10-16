@@ -1,9 +1,13 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
+import { CartProvider } from '@/components/cart/CartProvider';
 import type { Product } from '@/lib/types';
 import { ProductCard } from './ProductCard';
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  localStorage.clear();
+});
 
 const product: Product = {
   id: 'p1', slug: 'iphone-17-pro', name: 'iPhone 17 Pro', description: '', categorySlug: 'iphone',
@@ -25,5 +29,18 @@ describe('ProductCard', () => {
   it('com variações, "Comprar" leva à página do produto', () => {
     render(<ProductCard product={product} />);
     expect(screen.getByText('Comprar').closest('a')?.getAttribute('href')).toBe('/produto/iphone-17-pro');
+  });
+
+  it('sem variações, "Comprar" adiciona 1 unidade e mostra "Ver carrinho"', () => {
+    const perfume: Product = {
+      ...product, slug: 'khamrah', name: 'Lattafa Khamrah EDP 100ml', optionNames: [],
+      variants: [{ id: 'v9', optionValues: [], retailCents: 34990, wholesaleCents: 21990, available: true }],
+    };
+    render(<CartProvider><ProductCard product={perfume} /></CartProvider>);
+    fireEvent.click(screen.getByRole('button', { name: 'Comprar' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Comprar' }));
+    expect(screen.getByRole('link', { name: 'Ver carrinho' }).getAttribute('href')).toBe('/carrinho');
+    const saved = JSON.parse(localStorage.getItem('franco.cart.v1')!);
+    expect(saved).toMatchObject([{ variantId: 'v9', qty: 2 }]);
   });
 });

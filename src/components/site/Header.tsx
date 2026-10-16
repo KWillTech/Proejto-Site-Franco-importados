@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { CartCount } from '@/components/cart/CartProvider';
 import styles from './Header.module.css';
 
 const ICON_ATENDIMENTO = (
@@ -9,7 +10,7 @@ const ICON_ATENDIMENTO = (
   </svg>
 );
 
-export function Header({ whatsappHref, cartCount }: { whatsappHref: string | null; cartCount: number }) {
+export function Header({ whatsappHref }: { whatsappHref: string | null }) {
   const atendimento = (
     <>
       {ICON_ATENDIMENTO}
@@ -50,7 +51,8 @@ export function Header({ whatsappHref, cartCount }: { whatsappHref: string | nul
               <circle cx="12" cy="24" r="1.6" fill="#0e1733" />
               <circle cx="22" cy="24" r="1.6" fill="#0e1733" />
             </svg>
-            <i className={styles.badge} aria-label={`${cartCount} itens`}>{cartCount}</i>
+            {/* O cabeçalho fica no cache; só o contador é do cliente e lê o carrinho do navegador. */}
+            <CartCount className={styles.badge} />
             <span>Meu carrinho</span>
           </Link>
         </div>

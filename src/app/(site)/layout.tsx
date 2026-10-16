@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { CartProvider } from '@/components/cart/CartProvider';
 import { ChannelProvider } from '@/components/site/ChannelProvider';
 import { Footer } from '@/components/site/Footer';
 import { Header } from '@/components/site/Header';
@@ -18,7 +19,7 @@ async function Shell({ children }: { children: ReactNode }) {
   return (
     <>
       <Topbar text={settings.topbarText} />
-      <Header whatsappHref={whatsappHref} cartCount={0} />
+      <Header whatsappHref={whatsappHref} />
       <Nav categories={categories} />
       <MobileMenu categories={categories} />
       <ChannelProvider>{children}</ChannelProvider>
@@ -29,5 +30,6 @@ async function Shell({ children }: { children: ReactNode }) {
 }
 
 export default function SiteLayout({ children }: LayoutProps<'/'>) {
-  return <Shell>{children}</Shell>;
+  // Carrinho é estado do navegador: o provider fica fora do Shell cacheado.
+  return <CartProvider><Shell>{children}</Shell></CartProvider>;
 }

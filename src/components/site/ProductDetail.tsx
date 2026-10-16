@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import { AddedToCart, useCart } from '@/components/cart/CartProvider';
 import { fromPrices, isSoldOut } from '@/lib/data';
-import type { CartLine, Product } from '@/lib/types';
+import type { Product } from '@/lib/types';
 import { clampQty, findVariant, toCartLine } from '@/lib/variants';
 import { useChannel } from './ChannelProvider';
 import { Gallery } from './Gallery';
@@ -11,9 +12,10 @@ import styles from './ProductDetail.module.css';
 import { QuantityInput } from './QuantityInput';
 import { VariantPicker } from './VariantPicker';
 
-// shortcut: sem onAdd o botão fica desabilitado ("Carrinho em breve"), a Task 9 passa o onAdd do carrinho.
-export function ProductDetail({ product, onAdd }: { product: Product; onAdd?: (line: CartLine) => void }) {
+export function ProductDetail({ product }: { product: Product }) {
   const { channel } = useChannel();
+  const { dispatch } = useCart();
+  const [added, setAdded] = useState(false);
   const [selected, setSelected] = useState<(string | null)[]>(() => product.optionNames.map(() => null));
   const [qty, setQty] = useState(1);
   const soldOut = isSoldOut(product);
@@ -22,10 +24,6 @@ export function ProductDetail({ product, onAdd }: { product: Product; onAdd?: (l
   const range = fromPrices(product);
   const prices = variant ?? range;
   const from = !variant && !!range?.hasRange;
-
-  let label = 'Adicionar ao carrinho';
-  if (!variant) label = 'Escolha as opções';
-  else if (!onAdd) label = 'Carrinho em breve';
 
   return (
     <div className={styles.detail}>
@@ -51,11 +49,16 @@ export function ProductDetail({ product, onAdd }: { product: Product; onAdd?: (l
               onSelect={(i, value) => setSelected((s) => s.map((x, j) => (j === i ? value : x)))} />
             <div className={styles.buy}>
               <QuantityInput value={qty} onChange={setQty} />
-              <button type="button" className={styles.add} disabled={!variant || !variant.available || !onAdd}
-                onClick={() => variant && onAdd?.(toCartLine(product, variant, clampQty(qty)))}>
-                {label}
+              <button type="button" className={styles.add} disabled={!variant || !variant.available}
+                onClick={() => {
+                  if (!variant) return;
+                  dispatch({ type: 'add', line: toCartLine(product, variant, clampQty(qty)) });
+                  setAdded(true);
+                }}>
+                {variant ? 'Adicionar ao carrinho' : 'Escolha as opções'}
               </button>
             </div>
+            <AddedToCart show={added} className={styles.added} />
           </>
         )}
         {product.description && <p className={styles.description}>{product.description}</p>}
