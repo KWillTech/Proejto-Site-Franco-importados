@@ -42,4 +42,16 @@ describe('variants', () => {
   it('clampQty limita a inteiro entre 1 e 999', () => {
     expect([0, -3, 2.7, 'abc', 5000, '12'].map(clampQty)).toEqual([1, 1, 2, 1, 999, 12]);
   });
+
+  it('clampQty trata números enormes como o teto 999', () => {
+    expect(clampQty('1e999')).toBe(999);
+    expect(clampQty(Infinity)).toBe(999);
+  });
+
+  it('findVariant devolve a variante única de produto sem opções', () => {
+    const single: Product = {
+      ...product, optionNames: [], variants: [mk('unica', [])],
+    };
+    expect(findVariant(single, [])?.id).toBe('unica');
+  });
 });

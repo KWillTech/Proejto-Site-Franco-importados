@@ -28,6 +28,6 @@ export function toCartLine(p: Product, v: Variant, qty: number): CartLine {
 }
 
 export function clampQty(raw: unknown): number {
-  const n = Math.floor(Number(raw));
-  return Number.isFinite(n) ? Math.min(999, Math.max(1, n)) : 1;
+  const n = Number(raw);
+  return Number.isNaN(n) ? 1 : Math.min(999, Math.max(1, Math.trunc(n)));
 }
