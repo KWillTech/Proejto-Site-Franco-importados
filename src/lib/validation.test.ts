@@ -111,6 +111,15 @@ describe('productSchema', () => {
     expect(errorsOf({ ...base, optionNames: ['a', 'b', 'c', 'd'] }).optionNames).toBe('Use no máximo 3 opções.');
   });
 
+  it('recusa nomes de opção repetidos, sem diferenciar maiúsculas', () => {
+    expect(errorsOf({ ...base, optionNames: ['Cor', 'cor '] }).optionNames).toBe('Os nomes das opções devem ser diferentes.');
+  });
+
+  it('recusa link de foto que começa com //', () => {
+    expect(errorsOf({ ...base, images: ['//evil.example/a.jpg'] })['images.0']).toBe('Imagem inválida.');
+    expect(errorsOf({ ...base, images: ['/placeholders/a.svg'] })['images.0']).toBeUndefined();
+  });
+
   it('recusa categoria inválida e imagem que não é link', () => {
     expect(errorsOf({ ...base, categoryId: 'x' }).categoryId).toBe('Escolha uma categoria.');
     expect(errorsOf({ ...base, images: ['javascript:alert(1)'] })['images.0']).toBe('Imagem inválida.');

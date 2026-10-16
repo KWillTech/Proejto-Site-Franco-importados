@@ -43,8 +43,11 @@ export const productSchema: z.ZodType<ProductInput> = z.object({
     .min(1, INSTALLMENTS_MSG).max(24, INSTALLMENTS_MSG).nullable()),
   optionNames: z.array(text.min(1, 'Dê um nome a cada opção.')).max(3, 'Use no máximo 3 opções.'),
   variants: z.array(variantSchema).min(1, 'Cadastre ao menos uma variação.'),
-  images: z.array(z.string().regex(/^(https?:\/\/|\/)\S+$/, 'Imagem inválida.')).max(10, 'Envie no máximo 10 fotos.'),
+  images: z.array(z.string().regex(/^(https?:\/\/|\/(?!\/))\S+$/, 'Imagem inválida.')).max(10, 'Envie no máximo 10 fotos.'),
 }).superRefine((p, ctx) => {
+  if (new Set(p.optionNames.map((n) => n.toLowerCase())).size !== p.optionNames.length) {
+    ctx.addIssue({ code: 'custom', path: ['optionNames'], message: 'Os nomes das opções devem ser diferentes.' });
+  }
   if (p.optionNames.length === 0 && p.variants.length > 1) {
     ctx.addIssue({ code: 'custom', path: ['variants'], message: 'Produto sem opções tem uma única variação.' });
     return;

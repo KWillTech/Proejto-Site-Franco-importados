@@ -6,7 +6,7 @@ import { deleteProduct, saveProduct } from '@/app/admin/(painel)/produtos/action
 import styles from '@/app/admin/admin.module.css';
 import { parseMoney, type ProductInput } from '@/lib/validation';
 import { ImageUploader } from './ImageUploader';
-import { VariantsEditor, newRow, type VariantRow } from './VariantsEditor';
+import { VariantsEditor, firstError, newRow, type VariantRow } from './VariantsEditor';
 
 type Props = { id: string | null; categories: Array<{ id: string; name: string }>; initial: ProductInput | null };
 
@@ -125,7 +125,7 @@ export function ProductForm({ id, categories, initial }: Props) {
         onChange={(names, next) => { setOptionNames(names); setRows(next); }}
       />
       <ImageUploader images={images} onChange={setImages} />
-      {fieldError('images') || fieldError('images.0')}
+      {firstError(errors, 'images') && <p className={styles.error} role="alert">{firstError(errors, 'images')}</p>}
       {hasErrors && (
         <p className={styles.error} role="alert">{errors.form ?? 'Revise os campos destacados.'}</p>
       )}

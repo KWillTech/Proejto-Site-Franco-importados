@@ -15,7 +15,7 @@ type Props = {
 };
 
 // Primeira mensagem cujo caminho começa com o prefixo (ex.: "variants.2" pega varejo, atacado e valores).
-const firstError = (errors: Record<string, string>, prefix: string) =>
+export const firstError = (errors: Record<string, string>, prefix: string) =>
   Object.entries(errors).find(([k]) => k === prefix || k.startsWith(`${prefix}.`))?.[1];
 
 export function VariantsEditor({ optionNames, rows, errors, onChange }: Props) {

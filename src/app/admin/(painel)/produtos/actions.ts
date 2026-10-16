@@ -23,7 +23,7 @@ function revalidateStore(productSlug: string, categorySlugs: Array<string | unde
   for (const c of new Set(categorySlugs)) if (c) revalidatePath(`/categoria/${c}`);
 }
 
-// shortcut: produto, variações e fotos são gravados em chamadas separadas, sem transação; uma falha no meio deixa o produto salvo pela metade (a mensagem pede para salvar de novo, o que corrige), trocar por uma função RPC se isso acontecer na prática.
+// shortcut: produto, variações e fotos são gravados em chamadas separadas, sem transação; na criação uma falha apaga o produto recém-criado, na edição deixa a gravação pela metade (salvar de novo corrige), trocar por uma função RPC se isso acontecer na prática.
 export async function saveProduct(id: string | null, input: unknown): Promise<Result> {
   await requireUser();
   if (id !== null && !isId(id)) return { ok: false, errors: { form: 'Produto não encontrado.' } };
@@ -35,8 +35,11 @@ export async function saveProduct(id: string | null, input: unknown): Promise<Re
   }
   const p = parsed.data;
   const supabase = await createClient();
-  const fail = (step: string, error: unknown): Result => {
+  let productId: string | undefined;
+  const fail = async (step: string, error: unknown): Promise<Result> => {
     console.error(`saveProduct: ${step}`, error);
+    // Criação que falhou no meio: desfaz o produto (variações e fotos saem em cascata).
+    if (!id && productId) await supabase.from('products').delete().eq('id', productId);
     return SAVE_FAILED;
   };
 
@@ -50,7 +53,6 @@ export async function saveProduct(id: string | null, input: unknown): Promise<Re
     option_names: p.optionNames,
   };
 
-  let productId: string;
   let slug: string;
   let oldCategory: string | undefined;
   if (id) {
@@ -97,17 +99,22 @@ export async function saveProduct(id: string | null, input: unknown): Promise<Re
     if (error) return fail('gravar variação', error);
   }
 
-  // Fotos não têm referência externa: recria a lista na ordem nova.
-  const { error: delImgError } = await supabase.from('product_images').delete().eq('product_id', productId);
-  if (delImgError) return fail('apagar fotos', delImgError);
+  // Fotos não têm referência externa: grava a lista nova e só então apaga a antiga (falha no meio não deixa o produto sem foto).
+  const { data: oldImages, error: readImgError } = await supabase.from('product_images').select('id').eq('product_id', productId);
+  if (readImgError) return fail('ler fotos', readImgError);
   if (p.images.length) {
     const { error } = await supabase.from('product_images')
       .insert(p.images.map((url, position) => ({ product_id: productId, url, position })));
     if (error) return fail('gravar fotos', error);
   }
+  const oldImageIds = (oldImages ?? []).map((i: { id: string }) => i.id);
+  if (oldImageIds.length) {
+    const { error } = await supabase.from('product_images').delete().eq('product_id', productId).in('id', oldImageIds);
+    if (error) return fail('apagar fotos antigas', error);
+  }
 
   revalidateStore(slug, [category.slug, oldCategory]);
-  return { ok: true, id: productId };
+  return { ok: true, id: productId! }; // os dois ramos acima atribuem; o closure fail impede o TS de estreitar
 }
 
 export async function deleteProduct(id: string): Promise<void> {
