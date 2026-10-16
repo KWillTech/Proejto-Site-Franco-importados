@@ -43,4 +43,17 @@ describe('ProductCard', () => {
     const saved = JSON.parse(localStorage.getItem('franco.cart.v1')!);
     expect(saved).toMatchObject([{ variantId: 'v9', qty: 2 }]);
   });
+
+  it('sem variações, "Comprar" usa a primeira variante disponível', () => {
+    const perfume: Product = {
+      ...product, slug: 'khamrah', optionNames: [],
+      variants: [
+        { id: 'esgotada', optionValues: [], retailCents: 34990, wholesaleCents: 21990, available: false },
+        { id: 'ok', optionValues: [], retailCents: 34990, wholesaleCents: 21990, available: true },
+      ],
+    };
+    render(<CartProvider><ProductCard product={perfume} /></CartProvider>);
+    fireEvent.click(screen.getByRole('button', { name: 'Comprar' }));
+    expect(JSON.parse(localStorage.getItem('franco.cart.v1')!)).toMatchObject([{ variantId: 'ok', qty: 1 }]);
+  });
 });

@@ -16,7 +16,7 @@ let broken = false;
 let lastRaw: string | null = null;
 let lastLines: CartLine[] = EMPTY;
 
-function read(): CartLine[] {
+export function readCart(): CartLine[] {
   if (broken) return mem;
   let raw: string | null;
   try {
@@ -32,7 +32,7 @@ function read(): CartLine[] {
 }
 
 function dispatch(action: CartAction) {
-  const next = cartReducer(read(), action);
+  const next = cartReducer(readCart(), action);
   mem = next;
   try {
     localStorage.setItem(KEY, JSON.stringify(next));
@@ -42,9 +42,14 @@ function dispatch(action: CartAction) {
   listeners.forEach((l) => l());
 }
 
+// O evento storage traz as mudanças feitas em outra aba.
 function subscribe(l: () => void) {
   listeners.add(l);
-  return () => listeners.delete(l);
+  window.addEventListener('storage', l);
+  return () => {
+    listeners.delete(l);
+    window.removeEventListener('storage', l);
+  };
 }
 
 const noop = () => () => {};
@@ -56,7 +61,7 @@ const CartContext = createContext<Ctx>({ lines: EMPTY, summary: summarize(EMPTY)
 
 export function CartProvider({ children }: { children: ReactNode }) {
   // No servidor e na hidratação o carrinho é vazio e ready é false; depois, o que estiver no localStorage.
-  const lines = useSyncExternalStore(subscribe, read, () => EMPTY);
+  const lines = useSyncExternalStore(subscribe, readCart, () => EMPTY);
   const ready = useSyncExternalStore(noop, () => true, () => false);
   return <CartContext value={{ lines, summary: summarize(lines), ready, dispatch }}>{children}</CartContext>;
 }

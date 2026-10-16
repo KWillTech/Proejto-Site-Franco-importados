@@ -20,6 +20,11 @@ describe('variants', () => {
     expect(findVariant(product, ['Azul', '256GB'])?.id).toBe('v1');
   });
 
+  it('sem opções, findVariant escolhe a primeira variante disponível', () => {
+    const single: Product = { ...product, optionNames: [], variants: [mk('a', [], false), mk('b', [])] };
+    expect(findVariant(single, [])?.id).toBe('b');
+  });
+
   it('optionValues lista valores distintos na ordem das variantes', () => {
     expect(optionValues(product, 0)).toEqual(['Azul', 'Preto']);
     expect(optionValues(product, 1)).toEqual(['256GB', '512GB']);

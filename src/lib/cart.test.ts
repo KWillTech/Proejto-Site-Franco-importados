@@ -94,6 +94,15 @@ describe('parseCart', () => {
     expect(parseCart(JSON.stringify([{ ...iphone, retailCents: 'caro' }]))).toEqual([]);
   });
 
+  it('linha com valores fora da faixa é descartada', () => {
+    const bad: Array<Partial<typeof iphone>> = [
+      { retailCents: -1 }, { wholesaleCents: 1.5 }, { pixPercent: 0 }, { pixPercent: 101 },
+      { installments: 0 }, { installments: 2.5 },
+    ];
+    for (const over of bad) expect(parseCart(JSON.stringify([khamrah, { ...iphone, ...over }]))).toEqual([khamrah]);
+    expect(parseCart(JSON.stringify([{ ...iphone, pixPercent: 100, installments: 1, retailCents: 0 }]))).toHaveLength(1);
+  });
+
   it('quantidade gravada inválida é corrigida para 1..999', () => {
     expect(parseCart(JSON.stringify([{ ...iphone, qty: 5000 }]))[0].qty).toBe(999);
   });

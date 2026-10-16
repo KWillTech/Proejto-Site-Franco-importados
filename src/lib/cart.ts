@@ -1,5 +1,9 @@
 import type { CartLine, Product, Variant } from './types';
 import { clampQty, toCartLine } from './variants';
+import { lineLabel } from './whatsapp';
+
+// Formato dos ids de variante; vale no navegador (antes de pedir) e na server action (fronteira).
+export const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export type CartAction =
   | { type: 'add'; line: CartLine } | { type: 'setQty'; variantId: string; qty: number }
@@ -23,8 +27,6 @@ export function cartReducer(lines: CartLine[], action: CartAction): CartLine[] {
   }
 }
 
-const label = (l: CartLine) => l.name + (l.optionLabel ? ' — ' + l.optionLabel : '');
-
 export function reconcileCart(lines: CartLine[], fresh: Array<{ variant: Variant; product: Product }>):
   { lines: CartLine[]; removed: string[]; priceChanged: boolean } {
   const out: CartLine[] = [];
@@ -33,7 +35,7 @@ export function reconcileCart(lines: CartLine[], fresh: Array<{ variant: Variant
   for (const l of lines) {
     const f = fresh.find((x) => x.variant.id === l.variantId);
     if (!f || !f.variant.available || !f.product.available) {
-      removed.push(label(l));
+      removed.push(lineLabel(l));
       continue;
     }
     const next = toCartLine(f.product, f.variant, l.qty);
@@ -45,22 +47,24 @@ export function reconcileCart(lines: CartLine[], fresh: Array<{ variant: Variant
   return { lines: out, removed, priceChanged };
 }
 
+const cents = (n: unknown) => Number.isInteger(n) && (n as number) >= 0;
+
 const isLine = (l: unknown): l is CartLine => {
   const x = l as Record<string, unknown>;
   return typeof x === 'object' && x !== null
     && ['variantId', 'productId', 'slug', 'name', 'optionLabel'].every((k) => typeof x[k] === 'string')
-    && Number.isInteger(x.retailCents) && Number.isInteger(x.wholesaleCents)
+    && cents(x.retailCents) && cents(x.wholesaleCents)
     && (x.image === null || typeof x.image === 'string')
-    && (x.pixPercent === null || typeof x.pixPercent === 'number')
-    && (x.installments === null || typeof x.installments === 'number');
+    && (x.pixPercent === null || (typeof x.pixPercent === 'number' && x.pixPercent > 0 && x.pixPercent <= 100))
+    && (x.installments === null || (Number.isInteger(x.installments) && (x.installments as number) >= 1));
 };
 
-// Conteúdo do localStorage: qualquer coisa fora do formato esperado vira carrinho vazio.
+// Conteúdo do localStorage: JSON quebrado ou que não é lista vira carrinho vazio; linha fora do formato é descartada.
 export function parseCart(raw: string | null): CartLine[] {
   try {
     const data: unknown = JSON.parse(raw ?? '[]');
-    if (!Array.isArray(data) || !data.every(isLine)) return [];
-    return data.map((l) => ({ ...l, qty: clampQty(l.qty) }));
+    if (!Array.isArray(data)) return [];
+    return data.filter(isLine).map((l) => ({ ...l, qty: clampQty(l.qty) }));
   } catch {
     return [];
   }

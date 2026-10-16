@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { AddedToCart, useCart } from '@/components/cart/CartProvider';
 import { fromPrices, isSoldOut } from '@/lib/data';
 import type { Product } from '@/lib/types';
-import { toCartLine } from '@/lib/variants';
+import { findVariant, toCartLine } from '@/lib/variants';
 import { useChannel } from './ChannelProvider';
 import { PriceBlock } from './PriceBlock';
 import { QuickView } from './QuickView';
@@ -53,7 +53,7 @@ export function ProductCard({ product }: { product: Product }) {
             <Link className={`${styles.btn} ${styles.primary}`} href={href}>Comprar</Link>
           ) : (
             <button type="button" className={`${styles.btn} ${styles.primary}`} onClick={() => {
-              dispatch({ type: 'add', line: toCartLine(product, product.variants[0], 1) });
+              dispatch({ type: 'add', line: toCartLine(product, findVariant(product, [])!, 1) });
               setAdded(true);
             }}>Comprar</button>
           ))}

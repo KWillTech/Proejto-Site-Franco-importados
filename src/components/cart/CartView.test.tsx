@@ -1,18 +1,35 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { refreshCart } from '@/app/(site)/carrinho/actions';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { iphone, khamrah } from '@/lib/test-fixtures';
-import type { CartLine } from '@/lib/types';
+import { iphone as iphoneBase, khamrah as khamrahBase } from '@/lib/test-fixtures';
+import type { CartLine, Product, Variant } from '@/lib/types';
 import { CartProvider } from './CartProvider';
 import { CartView } from './CartView';
 
-// A atualização de preços depende do banco; aqui ela nunca responde e o carrinho fica como gravado.
+// A atualização de preços depende do banco; por padrão ela nunca responde e o carrinho fica como gravado.
 vi.mock('@/app/(site)/carrinho/actions', () => ({ refreshCart: vi.fn(() => new Promise(() => {})) }));
 
 afterEach(() => {
   cleanup();
   localStorage.clear();
+  vi.mocked(refreshCart).mockClear();
 });
+
+const iphone: CartLine = { ...iphoneBase, variantId: '11111111-1111-4111-8111-111111111111' };
+const khamrah: CartLine = { ...khamrahBase, variantId: '22222222-2222-4222-8222-222222222222' };
+
+// Variante e produto "do banco" equivalentes a uma linha do carrinho.
+function freshOf(l: CartLine, over: Partial<Variant> = {}): { variant: Variant; product: Product } {
+  const variant: Variant = { id: l.variantId, optionValues: l.optionLabel ? l.optionLabel.split(', ') : [],
+    retailCents: l.retailCents, wholesaleCents: l.wholesaleCents, available: true, ...over };
+  return { variant, product: {
+    id: l.productId, slug: l.slug, name: l.name, description: '', categorySlug: 'x', images: [], badge: null,
+    available: true, featured: false, pixPercent: l.pixPercent, installments: l.installments,
+    optionNames: variant.optionValues.map(() => 'Opção'), variants: [variant],
+  } };
+}
+
+const flush = () => act(() => new Promise((r) => setTimeout(r, 0)));
 
 function renderCart(lines: CartLine[], whatsappNumber = '(62) 99999-0000') {
   localStorage.setItem('franco.cart.v1', JSON.stringify(lines));
@@ -89,11 +106,37 @@ describe('CartView', () => {
     expect(screen.getByText('Seu carrinho está vazio.')).toBeTruthy();
   });
 
-  it('se a atualização falhar, o carrinho fica como estava', async () => {
+  it('id fora do formato não impede a conferência dos outros e sai com aviso', async () => {
+    vi.mocked(refreshCart).mockImplementationOnce(async (ids) => (ids.includes(khamrah.variantId) ? [freshOf(khamrah)] : []));
+    renderCart([{ ...iphone, variantId: 'abc' }, khamrah]);
+    expect(await screen.findByText('Removemos do carrinho por indisponibilidade: iPhone 17 Pro — Azul, 256GB.')).toBeTruthy();
+    expect(refreshCart).toHaveBeenCalledWith([khamrah.variantId]);
+    expect(JSON.parse(localStorage.getItem('franco.cart.v1')!).map((l: CartLine) => l.variantId)).toEqual([khamrah.variantId]);
+  });
+
+  it('preço diferente no banco atualiza a linha e avisa', async () => {
+    vi.mocked(refreshCart).mockResolvedValueOnce([freshOf(khamrah, { retailCents: 39990 })]);
+    renderCart([{ ...khamrah, qty: 3 }]);
+    expect(await screen.findByText('Alguns preços foram atualizados.')).toBeTruthy();
+    expect(screen.getByText('R$ 399,90 cada')).toBeTruthy();
+  });
+
+  it('se a conferência falhar, o carrinho fica como estava e avisa', async () => {
     vi.mocked(refreshCart).mockRejectedValueOnce(new Error('fora do ar'));
     renderCart([iphone]);
-    await Promise.resolve();
+    expect(await screen.findByText('Não foi possível conferir os preços agora.')).toBeTruthy();
     expect(screen.getByText('iPhone 17 Pro')).toBeTruthy();
     expect(JSON.parse(localStorage.getItem('franco.cart.v1')!)).toEqual([iphone]);
+  });
+
+  it('linha que chega depois da primeira conferência também é conferida', async () => {
+    vi.mocked(refreshCart).mockResolvedValueOnce([freshOf(iphone)]).mockResolvedValueOnce([freshOf(khamrah)]);
+    renderCart([iphone]);
+    await flush();
+    // Outra aba grava o carrinho com mais uma linha.
+    localStorage.setItem('franco.cart.v1', JSON.stringify([iphone, khamrah]));
+    await act(async () => window.dispatchEvent(new StorageEvent('storage', { key: 'franco.cart.v1' })));
+    await flush();
+    expect(vi.mocked(refreshCart).mock.calls).toEqual([[[iphone.variantId]], [[khamrah.variantId]]]);
   });
 });

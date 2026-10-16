@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { CartProvider } from '@/components/cart/CartProvider';
 import { khamrah } from '@/lib/test-fixtures';
@@ -30,5 +30,13 @@ describe('Header', () => {
     localStorage.setItem('franco.cart.v1', JSON.stringify([{ ...khamrah, qty: 9 }]));
     render(<CartProvider><Header whatsappHref={null} /></CartProvider>);
     expect(screen.getByLabelText('9 itens').textContent).toBe('9');
+  });
+
+  it('o contador acompanha o carrinho alterado em outra aba', () => {
+    render(<CartProvider><Header whatsappHref={null} /></CartProvider>);
+    expect(screen.getByLabelText('0 itens')).toBeTruthy();
+    localStorage.setItem('franco.cart.v1', JSON.stringify([{ ...khamrah, qty: 4 }]));
+    act(() => { window.dispatchEvent(new StorageEvent('storage', { key: 'franco.cart.v1' })); });
+    expect(screen.getByLabelText('4 itens')).toBeTruthy();
   });
 });

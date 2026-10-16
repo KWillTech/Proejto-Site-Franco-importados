@@ -19,7 +19,7 @@ export function ProductDetail({ product }: { product: Product }) {
   const [selected, setSelected] = useState<(string | null)[]>(() => product.optionNames.map(() => null));
   const [qty, setQty] = useState(1);
   const soldOut = isSoldOut(product);
-  // Sem opções (optionNames vazio) findVariant já devolve a variante única.
+  // Sem opções (optionNames vazio) findVariant já devolve a primeira variante disponível.
   const variant = findVariant(product, selected);
   const range = fromPrices(product);
   const prices = variant ?? range;

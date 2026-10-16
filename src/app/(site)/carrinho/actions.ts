@@ -1,9 +1,9 @@
 'use server';
 
+import { UUID } from '@/lib/cart';
 import { getVariantsByIds } from '@/lib/data';
 import type { Product, Variant } from '@/lib/types';
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const MAX_IDS = 100;
 
 // Só leitura. Os ids vêm do navegador: entrada fora do formato é recusada e o carrinho não é alterado.

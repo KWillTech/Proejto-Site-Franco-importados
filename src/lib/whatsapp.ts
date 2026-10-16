@@ -14,12 +14,17 @@ function clean(text: string): string {
   return text.replace(/\s+/g, ' ').trim();
 }
 
+// "iPhone 17 Pro — Azul, 256GB": usado na mensagem e no aviso de remoção do carrinho.
+export function lineLabel(l: { name: string; optionLabel: string }): string {
+  return l.name + (l.optionLabel ? ' — ' + l.optionLabel : '');
+}
+
 export function buildOrderMessage(summary: CartSummary, customer: Customer): string {
   const tipo = summary.channel === 'atacado' ? 'ATACADO' : 'VAREJO';
   const peças = summary.pieces === 1 ? 'peça' : 'peças';
 
   const items = summary.lines.flatMap((l, i) => {
-    const title = `${i + 1}. ${l.name}${l.optionLabel ? ' — ' + l.optionLabel : ''}`;
+    const title = `${i + 1}. ${lineLabel(l)}`;
     const detail = `   ${l.qty} x ${formatBRL(l.unitCents)} = ${formatBRL(l.subtotalCents)}`;
     return [title, detail];
   });

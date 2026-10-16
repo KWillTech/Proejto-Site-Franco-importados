@@ -5,6 +5,8 @@ const matches = (v: Variant, selected: (string | null)[]) =>
 
 export function findVariant(p: Product, selected: (string | null)[]): Variant | null {
   if (selected.some((s) => s === null)) return null;
+  // Sem opções: a primeira variante disponível (a primeira de todas se o produto está esgotado).
+  if (selected.length === 0) return p.variants.find((v) => v.available) ?? p.variants[0] ?? null;
   return p.variants.find((v) => matches(v, selected)) ?? null;
 }
 

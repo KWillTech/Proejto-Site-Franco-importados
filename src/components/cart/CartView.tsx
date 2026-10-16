@@ -5,14 +5,16 @@ import { useEffect, useRef, useState } from 'react';
 import { refreshCart } from '@/app/(site)/carrinho/actions';
 import card from '@/components/site/ProductCard.module.css';
 import { QuantityInput } from '@/components/site/QuantityInput';
-import { reconcileCart } from '@/lib/cart';
+import { reconcileCart, UUID } from '@/lib/cart';
 import { formatBRL } from '@/lib/pricing';
 import { buildOrderMessage, normalizePhone, whatsappUrl, type Customer } from '@/lib/whatsapp';
-import { useCart } from './CartProvider';
+import { readCart, useCart } from './CartProvider';
 import styles from './CartView.module.css';
 import { CustomerForm } from './CustomerForm';
 
 const CUSTOMER_KEY = 'franco.customer.v1';
+// shortcut: confere no máximo 100 linhas novas por vez (limite da server action); as demais só quando o carrinho mudar de novo, paginar se carrinhos assim aparecerem.
+const MAX_CHECK = 100;
 
 // Só é exibido depois de ready (sem HTML do servidor), então ler o localStorage aqui não causa diferença de hidratação.
 function loadCustomer(): Customer {
@@ -36,26 +38,29 @@ export function CartView({ whatsappNumber }: { whatsappNumber: string }) {
   const [missingCustomer, setMissingCustomer] = useState(false);
   const [copyStatus, setCopyStatus] = useState('');
 
-  // Ao abrir, confere preços e disponibilidade uma vez; se falhar, o carrinho fica como estava.
-  const latest = useRef(lines);
+  // Confere no banco cada linha uma vez (inclusive as que chegam depois, com a rota escondida e reexibida).
+  const checked = useRef(new Set<string>());
   useEffect(() => {
-    latest.current = lines;
-  });
-  const refreshed = useRef(false);
-  useEffect(() => {
-    if (!ready || refreshed.current) return;
-    refreshed.current = true;
-    const asked = new Set(lines.map((l) => l.variantId));
-    if (asked.size === 0) return;
-    refreshCart([...asked]).then((fresh) => {
-      const current = latest.current;
-      const r = reconcileCart(current.filter((l) => asked.has(l.variantId)), fresh);
+    if (!ready) return;
+    const asking = lines.map((l) => l.variantId).filter((id) => !checked.current.has(id));
+    // Ids fora do formato vão para a reconciliação sem consulta: não voltam do banco e saem com aviso.
+    const valid = asking.filter((id) => UUID.test(id)).slice(0, MAX_CHECK);
+    const ids = new Set([...asking.filter((id) => !UUID.test(id)), ...valid]);
+    if (ids.size === 0) return;
+    ids.forEach((id) => checked.current.add(id));
+    (valid.length ? refreshCart(valid) : Promise.resolve([])).then((fresh) => {
+      const current = readCart();
+      const r = reconcileCart(current.filter((l) => ids.has(l.variantId)), fresh);
+      const updated = new Map(r.lines.map((l) => [l.variantId, l]));
       const next: string[] = [];
       if (r.removed.length) next.push(`Removemos do carrinho por indisponibilidade: ${r.removed.join(', ')}.`);
       if (r.priceChanged) next.push('Alguns preços foram atualizados.');
-      setNotices(next);
-      dispatch({ type: 'replace', lines: [...r.lines, ...current.filter((l) => !asked.has(l.variantId))] });
-    }, () => {});
+      if (next.length) setNotices(next);
+      dispatch({ type: 'replace', lines: current.flatMap((l) => (ids.has(l.variantId) ? updated.get(l.variantId) ?? [] : [l])) });
+    }, () => {
+      ids.forEach((id) => checked.current.delete(id));
+      setNotices(['Não foi possível conferir os preços agora.']);
+    });
   }, [ready, lines, dispatch]);
 
   if (!ready) return <p className="center">Carregando seu carrinho…</p>;
