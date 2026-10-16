@@ -1,0 +1,19 @@
+.nav {
+  border-top: 0.8px solid rgba(14, 23, 51, 0.2);
+  border-bottom: 0.8px solid rgba(14, 23, 51, 0.2);
+  text-align: center;
+  background: #fff;
+  color: var(--navy);
+}
+.nav a {
+  display: inline-block;
+  font-weight: 500;
+  letter-spacing: 1px;
+  line-height: 50px;
+  padding: 0 15px;
+}
+@media (max-width: 767px) {
+  .nav {
+    display: none;
+  }
+}

@@ -1,0 +1,168 @@
+.head {
+  background: #fff;
+  color: var(--navy);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+.row {
+  display: flex;
+  align-items: center;
+  padding: 0 15px;
+  min-height: 110px;
+}
+.logo {
+  flex: 0 0 25%;
+}
+.logo img {
+  height: 80px;
+  width: auto;
+  display: block;
+  margin: 15px 0;
+}
+.search {
+  flex: 0 0 50%;
+  position: relative;
+}
+.search input {
+  width: 100%;
+  height: 42px;
+  border: 0.8px solid var(--navy);
+  border-radius: 10px;
+  padding: 12px 44px 12px 12px;
+  font: inherit;
+  color: var(--navy);
+  outline: none;
+}
+.search input::placeholder {
+  color: var(--navy);
+  opacity: 0.75;
+}
+.search button {
+  position: absolute;
+  right: 11px;
+  top: 8px;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.search svg {
+  width: 26px;
+  height: 26px;
+  display: block;
+}
+.utils {
+  flex: 0 0 25%;
+  display: flex;
+  justify-content: flex-end;
+  min-width: 0;
+}
+.util {
+  flex: 1 1 0;
+  max-width: 115px;
+  min-width: 0;
+  text-align: center;
+  padding: 15px 0;
+  position: relative;
+}
+.util svg {
+  width: 30px;
+  height: 28px;
+  display: block;
+  margin: 0 auto;
+}
+.util span {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  padding-top: 5px;
+}
+.badge {
+  position: absolute;
+  top: 8px;
+  left: calc(50% + 2px);
+  background: var(--navy);
+  color: #fff;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 18px;
+}
+.burger {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .row {
+    flex-wrap: wrap;
+    min-height: 0;
+    padding: 0 18px 14px;
+  }
+  .burger {
+    display: block;
+    flex: 0 0 20%;
+    background: none;
+    border: 0;
+    padding: 0;
+    text-align: left;
+  }
+  .burger svg {
+    width: 30px;
+    height: 30px;
+  }
+  .logo {
+    flex: 0 0 60%;
+    display: flex;
+    justify-content: center;
+  }
+  .logo img {
+    height: 62px;
+    margin: 10px 0;
+  }
+  .utils {
+    flex: 0 0 20%;
+  }
+  .util {
+    flex: none;
+    max-width: none;
+    padding: 0;
+  }
+  .hideMobile,
+  .util span {
+    display: none;
+  }
+  .util svg {
+    width: 36px;
+    height: 34px;
+  }
+  .badge {
+    top: -8px;
+    left: auto;
+    right: -8px;
+  }
+  .search {
+    flex: 0 0 100%;
+    order: 5;
+  }
+  .search input {
+    height: 52px;
+    font-size: 17px;
+    padding-left: 14px;
+  }
+  .search button {
+    top: 11px;
+    width: 30px;
+    height: 30px;
+    right: 14px;
+  }
+  .search svg {
+    width: 30px;
+    height: 30px;
+  }
+}
