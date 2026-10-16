@@ -51,6 +51,10 @@ export async function reorderBanners(ids: unknown): Promise<Result> {
   await requireUser();
   if (!Array.isArray(ids) || !ids.every(isId) || new Set(ids).size !== ids.length) return fail('Ordem inválida.');
   const supabase = await createClient();
+  const { data, error: readError } = await supabase.from('banners').select('id');
+  if (readError) return SAVE_FAILED;
+  const have = new Set((data ?? []).map((r: { id: string }) => r.id));
+  if (have.size !== ids.length || !ids.every((id) => have.has(id))) return fail('Ordem inválida.');
   // shortcut: uma gravação por banner, sem transação; uma falha no meio deixa a ordem pela metade, mover de novo corrige.
   for (const [position, id] of ids.entries()) {
     const { error } = await supabase.from('banners').update({ position }).eq('id', id);

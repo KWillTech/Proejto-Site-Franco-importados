@@ -22,7 +22,7 @@ const emptyToNull = (v: unknown) => (v === '' || v === undefined ? null : v);
 const cents = z.number({ error: PRICE_MSG }).int(PRICE_MSG).positive('Informe um preço maior que zero.').max(99_999_999, PRICE_MSG);
 const text = z.string().trim();
 
-const imageUrl = z.string().regex(/^(https?:\/\/|\/(?!\/))\S+$/, 'Imagem inválida.');
+const imageUrl = z.string().regex(/^(https?:\/\/|\/(?![\/\\]))\S+$/, 'Imagem inválida.');
 
 const variantSchema = z.object({
   id: z.string().regex(UUID).optional(),
@@ -119,7 +119,7 @@ export const bannerSchema = z.object({
   imageDesktop: imageRequired('Envie a imagem para tela larga.'),
   imageMobile: imageRequired('Envie a imagem para celular.'),
   alt: text,
-  link: text.regex(/^(\/(?!\/)\S*|https?:\/\/\S+)?$/, LINK_MSG).transform((v) => v || null),
+  link: text.regex(/^(\/(?![\/\\])\S*|https?:\/\/\S+)?$/, LINK_MSG).transform((v) => v || null),
   active: z.boolean(),
 });
 

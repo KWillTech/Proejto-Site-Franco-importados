@@ -57,6 +57,14 @@ describe('com sessão', () => {
     expect(writes).toEqual([]);
   });
 
+  it('recusa ordem parcial ou com id desconhecido', async () => {
+    const OTHER = '1b6c4a2e-1f3d-4c5b-9a8e-7d6f5e4c3b2a';
+    const writes = fake([{ id: ID }, { id: OTHER }]);
+    expect(await reorderCategories([ID])).toEqual({ ok: false, errors: { form: 'Ordem inválida.' } });
+    expect((await reorderCategories([ID, '2b6c4a2e-1f3d-4c5b-9a8e-7d6f5e4c3b2a'])).ok).toBe(false);
+    expect(writes).toEqual([]);
+  });
+
   it('não exclui categoria com produtos', async () => {
     const writes = fake([{ id: 'p1' }]);
     expect(await deleteCategory(ID)).toEqual({ ok: false, errors: { form: 'Mova ou exclua os produtos desta categoria antes.' } });

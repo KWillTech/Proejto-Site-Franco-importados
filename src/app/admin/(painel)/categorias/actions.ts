@@ -31,6 +31,7 @@ export async function saveCategory(id: string | null, input: unknown): Promise<R
     if (id) q = q.neq('id', id);
     const { data, error } = await q;
     if (error) return SAVE_FAILED;
+    // shortcut: conferir e gravar não são atômicos; duas gravações simultâneas poderiam passar de 3, tolerável com uma só pessoa no painel, trocar por trigger/constraint no banco se mudar.
     if ((data ?? []).length >= 3) return fail('Escolha no máximo 3 categorias para a home.', 'homeCard');
   }
 
@@ -72,6 +73,10 @@ export async function reorderCategories(ids: unknown): Promise<Result> {
   await requireUser();
   if (!Array.isArray(ids) || !ids.every(isId) || new Set(ids).size !== ids.length) return fail('Ordem inválida.');
   const supabase = await createClient();
+  const { data, error: readError } = await supabase.from('categories').select('id');
+  if (readError) return SAVE_FAILED;
+  const have = new Set((data ?? []).map((r: { id: string }) => r.id));
+  if (have.size !== ids.length || !ids.every((id) => have.has(id))) return fail('Ordem inválida.');
   // shortcut: uma gravação por categoria, sem transação; uma falha no meio deixa a ordem pela metade, mover de novo corrige.
   for (const [position, id] of ids.entries()) {
     const { error } = await supabase.from('categories').update({ position }).eq('id', id);

@@ -117,6 +117,7 @@ describe('productSchema', () => {
 
   it('recusa link de foto que começa com //', () => {
     expect(errorsOf({ ...base, images: ['//evil.example/a.jpg'] })['images.0']).toBe('Imagem inválida.');
+    expect(errorsOf({ ...base, images: ['/\\evil.example/a.jpg'] })['images.0']).toBe('Imagem inválida.');
     expect(errorsOf({ ...base, images: ['/placeholders/a.svg'] })['images.0']).toBeUndefined();
   });
 
@@ -175,7 +176,7 @@ describe('bannerSchema', () => {
   it('aceita link vazio, caminho ou URL; recusa o resto', () => {
     for (const link of ['', '/categoria/perfumes', 'https://loja.com/x']) expect(bannerSchema.safeParse({ ...ok, link }).success).toBe(true);
     expect(bannerSchema.parse(ok).link).toBeNull();
-    for (const link of ['//evil.com', 'javascript:alert(1)', 'loja.com']) {
+    for (const link of ['//evil.com', '/\\evil.com', 'javascript:alert(1)', 'loja.com']) {
       expect(msgs(bannerSchema, { ...ok, link })).toEqual({ link: 'Use um caminho como /categoria/perfumes ou um endereço http(s).' });
     }
   });

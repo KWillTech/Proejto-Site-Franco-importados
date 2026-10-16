@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { requireUser } from '@/lib/auth';
 import { UUID } from '@/lib/cart';
 import { createClient } from '@/lib/supabase/server';
-import { productSchema, slugify, uniqueSlug } from '@/lib/validation';
+import { fieldErrors, productSchema, slugify, uniqueSlug } from '@/lib/validation';
 
 type Result = { ok: true; id: string } | { ok: false; errors: Record<string, string> };
 type SlugRow = { slug: string; categories: { slug: string } | null };
@@ -28,11 +28,7 @@ export async function saveProduct(id: string | null, input: unknown): Promise<Re
   await requireUser();
   if (id !== null && !isId(id)) return { ok: false, errors: { form: 'Produto não encontrado.' } };
   const parsed = productSchema.safeParse(input);
-  if (!parsed.success) {
-    const errors: Record<string, string> = {};
-    for (const i of parsed.error.issues) errors[i.path.join('.')] ??= i.message;
-    return { ok: false, errors };
-  }
+  if (!parsed.success) return { ok: false, errors: fieldErrors(parsed.error) };
   const p = parsed.data;
   const supabase = await createClient();
   let productId: string | undefined;

@@ -40,3 +40,13 @@ describe('com sessão, entrada inválida não chega ao banco', () => {
     expect(createClient).not.toHaveBeenCalled();
   });
 });
+
+it('reorderBanners recusa lista parcial sem gravar', async () => {
+  requireUser.mockResolvedValue({ id: 'u1' });
+  const writes: string[] = [];
+  const b: Record<string, unknown> = { select: () => b, update: () => { writes.push('update'); return b; } };
+  b.then = (ok: (r: unknown) => void) => ok({ data: [{ id: ID }, { id: '1b6c4a2e-1f3d-4c5b-9a8e-7d6f5e4c3b2a' }], error: null });
+  createClient.mockResolvedValue({ from: () => b });
+  expect(await reorderBanners([ID])).toEqual({ ok: false, errors: { form: 'Ordem inválida.' } });
+  expect(writes).toEqual([]);
+});
