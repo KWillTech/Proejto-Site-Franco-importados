@@ -1,0 +1,31 @@
+.dialog {
+  width: min(900px, 94vw);
+  max-height: 90vh;
+  padding: 0;
+  border: 0;
+  border-radius: 20px;
+  text-align: left;
+}
+.dialog::backdrop {
+  background: rgba(14, 23, 51, 0.6);
+}
+.body {
+  position: relative;
+  padding: 32px 20px 20px;
+}
+.close {
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  border: 0;
+  background: none;
+  font-size: 30px;
+  line-height: 1;
+  color: var(--navy);
+  cursor: pointer;
+}
+@media (min-width: 768px) {
+  .body {
+    padding: 40px;
+  }
+}

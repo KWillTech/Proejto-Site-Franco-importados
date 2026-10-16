@@ -1,0 +1,27 @@
+.qty {
+  display: inline-flex;
+  border: 0.8px solid var(--navy);
+  border-radius: 40px;
+  overflow: hidden;
+}
+.qty button,
+.qty input {
+  border: 0;
+  background: #fff;
+  color: var(--navy);
+  font: inherit;
+  font-weight: 700;
+  height: 40px;
+}
+.qty button {
+  width: 40px;
+  cursor: pointer;
+}
+.qty input {
+  width: 56px;
+  text-align: center;
+  appearance: textfield;
+}
+.qty input::-webkit-inner-spin-button {
+  appearance: none;
+}

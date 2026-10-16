@@ -1,10 +1,12 @@
 'use client';
 
 import Link from 'next/link';
+import { useState } from 'react';
 import { fromPrices, isSoldOut } from '@/lib/data';
 import type { Product } from '@/lib/types';
 import { useChannel } from './ChannelProvider';
 import { PriceBlock } from './PriceBlock';
+import { QuickView } from './QuickView';
 import styles from './ProductCard.module.css';
 
 // Selos "5% OFF" viram o círculo do mockup; o resto é etiqueta.
@@ -16,6 +18,7 @@ function Badge({ text }: { text: string }) {
 
 export function ProductCard({ product }: { product: Product }) {
   const { channel } = useChannel();
+  const [quick, setQuick] = useState(false);
   const prices = fromPrices(product);
   const soldOut = isSoldOut(product);
   const href = `/produto/${product.slug}`;
@@ -43,14 +46,15 @@ export function ProductCard({ product }: { product: Product }) {
         <div className={styles.actions}>
           {/* Até a Task 9 ligar o carrinho, "Comprar" sempre leva à página do produto. */}
           {!soldOut && <Link className={`${styles.btn} ${styles.primary}`} href={href}>Comprar</Link>}
-          <Link className={`${styles.btn} ${styles.secondary}`} href={href}>
+          <button type="button" className={`${styles.btn} ${styles.secondary}`} onClick={() => setQuick(true)}>
             <svg viewBox="0 0 16 16" fill="#0e1733" aria-hidden="true">
               <path d="M8 3C4 3 1.5 6 .8 8c.7 2 3.2 5 7.2 5s6.5-3 7.2-5C14.5 6 12 3 8 3zm0 8a3 3 0 1 1 0-6 3 3 0 0 1 0 6z" />
             </svg>
             Espiar
-          </Link>
+          </button>
         </div>
       </div>
+      {quick && <QuickView product={product} onClose={() => setQuick(false)} />}
     </div>
   );
 }

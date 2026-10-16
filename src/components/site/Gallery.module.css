@@ -1,0 +1,36 @@
+.main {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8%;
+  border: 0.8px solid var(--soft);
+  border-radius: 20px;
+  box-shadow: 0 0 6px rgba(149, 165, 166, 0.12);
+  background: #fff;
+}
+.main img {
+  max-width: 100%;
+  max-height: 100%;
+}
+.thumbs {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+.thumbs button {
+  width: 64px;
+  height: 64px;
+  padding: 6px;
+  border: 0.8px solid var(--gray);
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+}
+.thumbs button.on {
+  border: 2px solid var(--navy);
+}
+.thumbs img {
+  max-width: 100%;
+  max-height: 100%;
+}

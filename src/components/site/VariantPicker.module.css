@@ -1,0 +1,35 @@
+.group {
+  border: 0;
+  padding: 0;
+  margin: 0 0 16px;
+}
+.group legend {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--navy);
+  padding: 0;
+  margin-bottom: 8px;
+}
+.opt {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 10px 16px;
+  margin: 0 8px 8px 0;
+  border-radius: 40px;
+  border: 0.8px solid var(--navy);
+  background: #fff;
+  color: var(--navy);
+  cursor: pointer;
+}
+.on {
+  background: var(--navy);
+  color: #fff;
+}
+.off {
+  opacity: 0.45;
+  text-decoration: line-through;
+  cursor: not-allowed;
+}
