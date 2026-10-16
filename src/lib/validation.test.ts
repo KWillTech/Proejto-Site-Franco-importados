@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseMoney, productSchema, slugify, uniqueSlug, validateImageFile } from './validation';
+import { bannerSchema, categorySchema, parseMoney, productSchema, settingsSchema, slugify, uniqueSlug, validateImageFile } from './validation';
 
 const CAT = '0b6c4a2e-1f3d-4c5b-9a8e-7d6f5e4c3b2a';
 const base = {
@@ -136,5 +136,47 @@ describe('validateImageFile', () => {
   it('recusa outro tipo e arquivo grande', () => {
     expect(validateImageFile({ type: 'application/pdf', size: 100 })).toBe('Envie uma imagem JPG, PNG ou WebP.');
     expect(validateImageFile({ type: 'image/jpeg', size: 6 * MB })).toBe('A imagem deve ter até 5MB.');
+  });
+});
+
+const IMG = '/placeholders/a.svg';
+const msgs = (schema: { safeParse: (v: unknown) => { success: boolean; error?: { issues: Array<{ path: PropertyKey[]; message: string }> } } }, input: unknown) =>
+  Object.fromEntries((schema.safeParse(input).error?.issues ?? []).map((i) => [i.path.join('.'), i.message]));
+
+describe('settingsSchema', () => {
+  it('grava o número normalizado', () => {
+    const r = settingsSchema.parse({ whatsappNumber: '(62) 99999-0000', topbarText: '' });
+    expect(r).toEqual({ whatsappNumber: '5562999990000', topbarText: '' });
+  });
+  it('recusa número sem DDD e texto de topo com mais de 80 caracteres', () => {
+    expect(msgs(settingsSchema, { whatsappNumber: '9999-0000', topbarText: 'x'.repeat(81) })).toEqual({
+      whatsappNumber: 'Informe um número de WhatsApp com DDD.',
+      topbarText: 'O texto do topo deve ter até 80 caracteres.',
+    });
+    expect(settingsSchema.safeParse({ whatsappNumber: '62999990000', topbarText: 'x'.repeat(80) }).success).toBe(true);
+  });
+});
+
+describe('categorySchema', () => {
+  const ok = { name: 'Perfumes', visible: true, homeCard: false, homeCardImage: null, homeCardTag: '' };
+  it('recusa nome vazio e aceita tag vazia como null', () => {
+    expect(msgs(categorySchema, { ...ok, name: '  ' })).toEqual({ name: 'Informe o nome da categoria.' });
+    expect(categorySchema.parse(ok).homeCardTag).toBeNull();
+  });
+});
+
+describe('bannerSchema', () => {
+  const ok = { imageDesktop: IMG, imageMobile: IMG, alt: '', link: '', active: true };
+  it('exige as duas imagens', () => {
+    expect(msgs(bannerSchema, { ...ok, imageDesktop: '', imageMobile: '' })).toEqual({
+      imageDesktop: 'Envie a imagem para tela larga.', imageMobile: 'Envie a imagem para celular.',
+    });
+  });
+  it('aceita link vazio, caminho ou URL; recusa o resto', () => {
+    for (const link of ['', '/categoria/perfumes', 'https://loja.com/x']) expect(bannerSchema.safeParse({ ...ok, link }).success).toBe(true);
+    expect(bannerSchema.parse(ok).link).toBeNull();
+    for (const link of ['//evil.com', 'javascript:alert(1)', 'loja.com']) {
+      expect(msgs(bannerSchema, { ...ok, link })).toEqual({ link: 'Use um caminho como /categoria/perfumes ou um endereço http(s).' });
+    }
   });
 });

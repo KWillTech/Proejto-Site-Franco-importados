@@ -8,7 +8,10 @@ import { validateImageFile } from '@/lib/validation';
 const EXT: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
 
 // shortcut: o bucket media não limita tipo nem tamanho no servidor (0001_init.sql não define allowed_mime_types nem file_size_limit), só esta checagem no navegador; definir os limites no bucket se mais gente além das duas contas do painel puder enviar.
-export function ImageUploader({ images, onChange }: { images: string[]; onChange: (images: string[]) => void }) {
+// `single`: campo de uma imagem só (cartão, banner); enviar outra troca a atual.
+export function ImageUploader({ images, onChange, label = 'Fotos', single = false }: {
+  images: string[]; onChange: (images: string[]) => void; label?: string; single?: boolean;
+}) {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -29,7 +32,7 @@ export function ImageUploader({ images, onChange }: { images: string[]; onChange
       urls.push(storage.getPublicUrl(path).data.publicUrl);
     }
     // Reordenar e remover ficam travados durante o envio, então `images` ainda é a lista atual.
-    onChange([...images, ...urls]);
+    onChange(single ? (urls.length ? urls.slice(-1) : images) : [...images, ...urls]);
     setBusy(false);
   }
 
@@ -41,8 +44,8 @@ export function ImageUploader({ images, onChange }: { images: string[]; onChange
 
   return (
     <fieldset className={styles.box}>
-      <legend>Fotos</legend>
-      <p className={styles.hint}>JPG, PNG ou WebP até 5MB. A primeira foto aparece nos cartões da loja.</p>
+      <legend>{label}</legend>
+      <p className={styles.hint}>JPG, PNG ou WebP até 5MB.{!single && ' A primeira foto aparece nos cartões da loja.'}</p>
       {images.length > 0 && (
         <ul className={styles.imgs}>
           {images.map((url, i) => (
@@ -50,8 +53,12 @@ export function ImageUploader({ images, onChange }: { images: string[]; onChange
               {/* eslint-disable-next-line @next/next/no-img-element -- fotos do Storage ou SVG de /placeholders */}
               <img src={url} alt={`Foto ${i + 1}`} />
               <div className={styles.imgActions}>
-                <button type="button" className={styles.btn} disabled={busy || i === 0} onClick={() => move(i, i - 1)} aria-label={`Mover foto ${i + 1} para antes`}>↑</button>
-                <button type="button" className={styles.btn} disabled={busy || i === images.length - 1} onClick={() => move(i, i + 1)} aria-label={`Mover foto ${i + 1} para depois`}>↓</button>
+                {!single && (
+                  <>
+                    <button type="button" className={styles.btn} disabled={busy || i === 0} onClick={() => move(i, i - 1)} aria-label={`Mover foto ${i + 1} para antes`}>↑</button>
+                    <button type="button" className={styles.btn} disabled={busy || i === images.length - 1} onClick={() => move(i, i + 1)} aria-label={`Mover foto ${i + 1} para depois`}>↓</button>
+                  </>
+                )}
                 {/* shortcut: remover só tira da lista, o arquivo continua no bucket; limpar órfãos se o espaço apertar. */}
                 <button type="button" className={styles.btn} disabled={busy} onClick={() => onChange(images.filter((_, j) => j !== i))} aria-label={`Remover foto ${i + 1}`}>✕</button>
               </div>
@@ -60,11 +67,11 @@ export function ImageUploader({ images, onChange }: { images: string[]; onChange
         </ul>
       )}
       <label>
-        {busy ? 'Enviando…' : 'Adicionar fotos'}
+        {busy ? 'Enviando…' : single ? (images.length ? 'Trocar imagem' : 'Escolher imagem') : 'Adicionar fotos'}
         <input
           type="file"
           accept="image/jpeg,image/png,image/webp"
-          multiple
+          multiple={!single}
           disabled={busy}
           onChange={(e) => {
             const files = [...(e.target.files ?? [])];

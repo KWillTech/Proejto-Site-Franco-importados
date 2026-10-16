@@ -308,3 +308,37 @@
     grid-column: 1 / -1;
   }
 }
+
+/* Categorias e banners: cada item é um cartão com cabeçalho e editor recolhível. */
+.panel {
+  border: 0.8px solid var(--footer);
+  border-radius: 20px;
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+.list + .panel {
+  margin-top: 10px;
+}
+.panelHead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.panelHead .info {
+  flex: 1;
+}
+.panelHead .imgActions {
+  flex: none;
+}
+.panelHead .imgActions .btn {
+  padding: 10px 14px;
+}
+.panel summary {
+  cursor: pointer;
+  font-weight: 500;
+}
+.panel .form {
+  margin-top: 14px;
+  max-width: 560px;
+}

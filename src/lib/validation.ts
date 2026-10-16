@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { UUID } from './cart';
+import { normalizePhone } from './whatsapp';
 
 export type ProductInput = {
   name: string; categoryId: string; description: string; badge: string | null;
@@ -20,6 +21,8 @@ const emptyToNull = (v: unknown) => (v === '' || v === undefined ? null : v);
 // Teto de R$ 999.999,99: a coluna é int e o valor digitado não pode estourar.
 const cents = z.number({ error: PRICE_MSG }).int(PRICE_MSG).positive('Informe um preço maior que zero.').max(99_999_999, PRICE_MSG);
 const text = z.string().trim();
+
+const imageUrl = z.string().regex(/^(https?:\/\/|\/(?!\/))\S+$/, 'Imagem inválida.');
 
 const variantSchema = z.object({
   id: z.string().regex(UUID).optional(),
@@ -43,7 +46,7 @@ export const productSchema: z.ZodType<ProductInput> = z.object({
     .min(1, INSTALLMENTS_MSG).max(24, INSTALLMENTS_MSG).nullable()),
   optionNames: z.array(text.min(1, 'Dê um nome a cada opção.')).max(3, 'Use no máximo 3 opções.'),
   variants: z.array(variantSchema).min(1, 'Cadastre ao menos uma variação.'),
-  images: z.array(z.string().regex(/^(https?:\/\/|\/(?!\/))\S+$/, 'Imagem inválida.')).max(10, 'Envie no máximo 10 fotos.'),
+  images: z.array(imageUrl).max(10, 'Envie no máximo 10 fotos.'),
 }).superRefine((p, ctx) => {
   if (new Set(p.optionNames.map((n) => n.toLowerCase())).size !== p.optionNames.length) {
     ctx.addIssue({ code: 'custom', path: ['optionNames'], message: 'Os nomes das opções devem ser diferentes.' });
@@ -90,4 +93,39 @@ export function validateImageFile(f: { type: string; size: number }): string | n
   if (!IMAGE_TYPES.includes(f.type)) return 'Envie uma imagem JPG, PNG ou WebP.';
   if (f.size > 5 * 1024 * 1024) return 'A imagem deve ter até 5MB.';
   return null;
+}
+
+export const settingsSchema = z.object({
+  whatsappNumber: text.transform((v, ctx) => {
+    const n = normalizePhone(v);
+    if (!n) ctx.addIssue({ code: 'custom', message: 'Informe um número de WhatsApp com DDD.' });
+    return n ?? v;
+  }),
+  topbarText: text.max(80, 'O texto do topo deve ter até 80 caracteres.'),
+});
+
+export const categorySchema = z.object({
+  name: text.min(1, 'Informe o nome da categoria.'),
+  visible: z.boolean(),
+  homeCard: z.boolean(),
+  homeCardImage: z.preprocess(emptyToNull, imageUrl.nullable()),
+  homeCardTag: z.string().trim().nullable().transform((v) => v || null),
+});
+
+const imageRequired = (msg: string) => z.string({ error: msg }).min(1, msg).pipe(imageUrl);
+const LINK_MSG = 'Use um caminho como /categoria/perfumes ou um endereço http(s).';
+
+export const bannerSchema = z.object({
+  imageDesktop: imageRequired('Envie a imagem para tela larga.'),
+  imageMobile: imageRequired('Envie a imagem para celular.'),
+  alt: text,
+  link: text.regex(/^(\/(?!\/)\S*|https?:\/\/\S+)?$/, LINK_MSG).transform((v) => v || null),
+  active: z.boolean(),
+});
+
+/** Erros do Zod como "caminho do campo" -> primeira mensagem, o formato que os formulários do painel mostram. */
+export function fieldErrors(error: z.ZodError): Record<string, string> {
+  const errors: Record<string, string> = {};
+  for (const i of error.issues) errors[i.path.join('.')] ??= i.message;
+  return errors;
 }
