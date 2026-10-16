@@ -37,8 +37,13 @@ describe('signIn', () => {
     expect(await signIn(null, form('dona@loja.com', 'errada'))).toBe('E-mail ou senha incorretos.');
   });
 
+  it('400 sem código também é credencial inválida', async () => {
+    signInWithPassword.mockResolvedValue({ data: {}, error: { status: 400, message: 'Invalid login credentials' } });
+    expect(await signIn(null, form('dona@loja.com', 'errada'))).toBe('E-mail ou senha incorretos.');
+  });
+
   it('outra falha não culpa a senha', async () => {
-    signInWithPassword.mockResolvedValue({ data: {}, error: { code: 'over_request_rate_limit', message: 'rate limit' } });
+    signInWithPassword.mockResolvedValue({ data: {}, error: { status: 429, code: 'over_request_rate_limit', message: 'rate limit' } });
     expect(await signIn(null, form('dona@loja.com', 'x'))).toBe('Não foi possível entrar agora. Tente de novo em instantes.');
   });
 
@@ -52,6 +57,6 @@ describe('signIn', () => {
 describe('signOut', () => {
   it('encerra a sessão e volta ao login', async () => {
     await expect(signOut()).rejects.toThrow('NEXT_REDIRECT /admin/login');
-    expect(signOutFn).toHaveBeenCalled();
+    expect(signOutFn).toHaveBeenCalledWith({ scope: 'local' });
   });
 });

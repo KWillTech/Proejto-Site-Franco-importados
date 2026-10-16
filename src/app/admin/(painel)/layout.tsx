@@ -5,7 +5,8 @@ import { signOut } from '@/app/admin/login/actions';
 import { requireUser } from '@/lib/auth';
 import styles from '../admin.module.css';
 
-// Lê a sessão: fica atrás do Suspense (cacheComponents); o conteúdo só aparece com usuário válido.
+// Segunda camada: a barreira é o proxy. O layout não controla o RSC dos filhos nem re-renderiza
+// na navegação, então cada página e action do painel chama requireUser() por conta própria.
 async function RequireSession({ children }: { children: ReactNode }) {
   await requireUser();
   return children;

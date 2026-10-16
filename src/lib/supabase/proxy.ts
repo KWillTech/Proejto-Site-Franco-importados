@@ -28,7 +28,10 @@ export async function updateSession(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = '/admin/login';
     url.search = '';
-    return NextResponse.redirect(url);
+    const redirect = NextResponse.redirect(url);
+    // Leva junto o que o Supabase gravou (ex.: limpeza do cookie de sessão inválido).
+    response.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));
+    return redirect;
   }
   return response;
 }

@@ -17,7 +17,8 @@ export async function signIn(_prev: string | null, formData: FormData): Promise<
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
   if (error) {
-    return error.code === 'invalid_credentials'
+    // status 400 cobre servidores do Auth que não mandam o código.
+    return error.code === 'invalid_credentials' || error.status === 400
       ? 'E-mail ou senha incorretos.'
       : 'Não foi possível entrar agora. Tente de novo em instantes.';
   }
@@ -26,6 +27,7 @@ export async function signIn(_prev: string | null, formData: FormData): Promise<
 
 export async function signOut() {
   const supabase = await createClient();
-  await supabase.auth.signOut();
+  // local: limpa os cookies mesmo se a chamada ao Auth falhar.
+  await supabase.auth.signOut({ scope: 'local' });
   redirect('/admin/login');
 }
