@@ -1,5 +1,6 @@
 -- Franco Importados: esquema inicial.
 -- Rode inteiro no SQL Editor do Supabase (depois rode supabase/seed.sql).
+-- Depois rode 0002_admins.sql e cadastre os donos em public.admins (instruções no topo dela); sem isso o painel não grava.
 
 begin;
 
