@@ -40,8 +40,8 @@ export default async function ProdutosPage({ searchParams }: PageProps<'/admin/p
       <h1 className={styles.title}>Produtos</h1>
       <div className={styles.toolbar}>
         <form className={styles.search} action="/admin/produtos">
-          <input type="search" name="q" defaultValue={raw} placeholder="Buscar por nome" aria-label="Buscar por nome" />
-          <CategoryFilter categories={categories} current={current} />
+          <input key={raw} type="search" name="q" defaultValue={raw} placeholder="Buscar por nome" aria-label="Buscar por nome" />
+          <CategoryFilter key={current} categories={categories} current={current} />
           <button type="submit" className={styles.btn}>Buscar</button>
         </form>
         {(raw || ids) && <Link className={styles.btn} href="/admin/produtos">Limpar filtros</Link>}
