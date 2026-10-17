@@ -17,6 +17,12 @@ export function moveAmongSiblings(rows: Array<{ id: string; parentId: string | n
   return ids;
 }
 
+// categoryId guardado no produto → os dois selects (categoria, subcategoria).
+export function splitCategory(rows: Array<{ id: string; parentId: string | null }>, id: string) {
+  const parentId = rows.find((r) => r.id === id)?.parentId;
+  return parentId ? { categoryId: parentId, subId: id } : { categoryId: id, subId: '' };
+}
+
 // Ids para filtrar por slug (?cat=): principal = ela + filhas, filha = só ela; inválido/repetido = null (sem filtro).
 export function categoryFilterIds(
   rows: Array<{ id: string; slug: string; parentId: string | null }>,

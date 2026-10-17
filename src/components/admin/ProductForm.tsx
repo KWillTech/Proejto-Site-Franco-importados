@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useTransition, type FormEvent } from 'react';
 import { deleteProduct, saveProduct } from '@/app/admin/(painel)/produtos/actions';
 import styles from '@/app/admin/admin.module.css';
-import { buildTree } from '@/lib/categories';
+import { splitCategory } from '@/lib/categories';
 import { parseMoney, type ProductInput } from '@/lib/validation';
 import { ImageUploader } from './ImageUploader';
 import { VariantsEditor, firstError, newRow, type VariantRow } from './VariantsEditor';
@@ -20,7 +20,9 @@ export function ProductForm({ id, categories, initial }: Props) {
   const [pending, startTransition] = useTransition();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [name, setName] = useState(initial?.name ?? '');
-  const [categoryId, setCategoryId] = useState(initial?.categoryId ?? '');
+  const start = splitCategory(categories, initial?.categoryId ?? '');
+  const [categoryId, setCategoryId] = useState(start.categoryId);
+  const [subId, setSubId] = useState(start.subId);
   const [description, setDescription] = useState(initial?.description ?? '');
   const [badge, setBadge] = useState(initial?.badge ?? '');
   const [featured, setFeatured] = useState(initial?.featured ?? false);
@@ -39,7 +41,7 @@ export function ProductForm({ id, categories, initial }: Props) {
   function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const input = {
-      name, categoryId, description, badge: badge || null, featured, available,
+      name, categoryId: subId || categoryId, description, badge: badge || null, featured, available,
       pixPercent: toNumber(pix), installments: toNumber(installments), optionNames, images,
       variants: rows.map((r) => ({
         id: r.id, optionValues: r.optionValues, available: r.available,
@@ -70,6 +72,7 @@ export function ProductForm({ id, categories, initial }: Props) {
   }
 
   const fieldError = (key: string) => errors[key] && <p className={styles.error} role="alert">{errors[key]}</p>;
+  const subs = categories.filter((c) => c.parentId === categoryId);
   const hasErrors = Object.keys(errors).length > 0;
 
   return (
@@ -81,18 +84,18 @@ export function ProductForm({ id, categories, initial }: Props) {
       </label>
       <label>
         Categoria
-        <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
+        <select value={categoryId} onChange={(e) => { setCategoryId(e.target.value); setSubId(''); }}>
           <option value="">Escolha…</option>
-          {buildTree(categories).map((c) => c.children.length === 0
-            ? <option key={c.id} value={c.id}>{c.name}</option>
-            : (
-              <optgroup key={c.id} label={c.name}>
-                <option value={c.id}>{c.name}</option>
-                {c.children.map((k) => <option key={k.id} value={k.id}>{k.name}</option>)}
-              </optgroup>
-            ))}
+          {categories.filter((c) => !c.parentId).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
         {fieldError('categoryId')}
+      </label>
+      <label>
+        Subcategoria
+        <select value={subId} onChange={(e) => setSubId(e.target.value)} disabled={subs.length === 0}>
+          <option value="">— nenhuma</option>
+          {subs.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+        </select>
       </label>
       <label>
         Descrição

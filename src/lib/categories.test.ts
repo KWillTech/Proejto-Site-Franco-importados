@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildTree, categoryFilterIds, moveAmongSiblings } from './categories';
+import { buildTree, categoryFilterIds, moveAmongSiblings, splitCategory } from './categories';
 
 const row = (id: string, parentId: string | null = null) => ({ id, parentId });
 
@@ -46,5 +46,16 @@ describe('categoryFilterIds', () => {
     expect(categoryFilterIds(cats, '')).toBeNull();
     expect(categoryFilterIds(cats, ['a', 'b'])).toBeNull();
     expect(categoryFilterIds(cats, undefined)).toBeNull();
+  });
+});
+
+describe('splitCategory', () => {
+  const rows = [row('A'), row('a1', 'A'), row('B')];
+  it('subcategoria devolve mãe e filha', () => {
+    expect(splitCategory(rows, 'a1')).toEqual({ categoryId: 'A', subId: 'a1' });
+  });
+  it('principal devolve só ela; vazio ou desconhecido, nada', () => {
+    expect(splitCategory(rows, 'B')).toEqual({ categoryId: 'B', subId: '' });
+    expect(splitCategory(rows, '')).toEqual({ categoryId: '', subId: '' });
   });
 });
