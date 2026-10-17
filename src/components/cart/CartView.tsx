@@ -37,6 +37,8 @@ export function CartView({ whatsappNumber }: { whatsappNumber: string }) {
   const [notices, setNotices] = useState<string[]>([]);
   const [missingCustomer, setMissingCustomer] = useState(false);
   const [copyStatus, setCopyStatus] = useState('');
+  // Linhas já conferidas com sucesso: o pedido só sai com os preços do banco.
+  const [verified, setVerified] = useState<ReadonlySet<string>>(() => new Set());
 
   // Confere no banco cada linha uma vez (inclusive as que chegam depois, com a rota escondida e reexibida).
   const checked = useRef(new Set<string>());
@@ -56,6 +58,7 @@ export function CartView({ whatsappNumber }: { whatsappNumber: string }) {
       if (r.removed.length) next.push(`Removemos do carrinho por indisponibilidade: ${r.removed.join(', ')}.`);
       if (r.priceChanged) next.push('Alguns preços foram atualizados.');
       if (next.length) setNotices(next);
+      setVerified((v) => new Set([...v, ...ids]));
       dispatch({ type: 'replace', lines: current.flatMap((l) => (ids.has(l.variantId) ? updated.get(l.variantId) ?? [] : [l])) });
     }, () => {
       ids.forEach((id) => checked.current.delete(id));
@@ -68,6 +71,7 @@ export function CartView({ whatsappNumber }: { whatsappNumber: string }) {
   const phone = normalizePhone(whatsappNumber);
   const hasCustomer = customer.name.trim() !== '' && customer.city.trim() !== '';
   const message = buildOrderMessage(summary, customer);
+  const canOrder = lines.every((l) => verified.has(l.variantId));
 
   function changeCustomer(c: Customer) {
     setCustomer(c);
@@ -131,7 +135,7 @@ export function CartView({ whatsappNumber }: { whatsappNumber: string }) {
             <CustomerForm value={customer} onChange={changeCustomer} />
             {missingCustomer && !hasCustomer && <p role="alert" className={styles.error}>Informe seu nome e sua cidade.</p>}
             <div className={styles.actions}>
-              {phone ? (
+              {phone && canOrder ? (
                 <a className={`${card.btn} ${card.primary}`} href={whatsappUrl(phone, message)} target="_blank" rel="noopener noreferrer"
                   onClick={(e) => {
                     if (!hasCustomer) {
@@ -144,7 +148,7 @@ export function CartView({ whatsappNumber }: { whatsappNumber: string }) {
               ) : (
                 <button type="button" className={`${card.btn} ${card.primary}`} disabled>Enviar pedido</button>
               )}
-              <button type="button" className={`${card.btn} ${card.secondary}`} onClick={copy}>Copiar pedido</button>
+              <button type="button" className={`${card.btn} ${card.secondary}`} onClick={copy} disabled={!canOrder}>Copiar pedido</button>
               <button type="button" className={`${card.btn} ${card.secondary}`}
                 onClick={() => window.confirm('Esvaziar o carrinho?') && dispatch({ type: 'clear' })}>
                 Esvaziar carrinho

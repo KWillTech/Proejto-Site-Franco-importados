@@ -6,6 +6,7 @@ vi.mock('@/lib/auth', () => ({ requireUser: () => requireUser() }));
 vi.mock('@/lib/supabase/server', () => ({ createClient: () => createClient() }));
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 
+import { revalidatePath } from 'next/cache';
 import { deleteProduct, saveProduct, setAvailable, setFeatured } from './actions';
 
 const ID = '0b6c4a2e-1f3d-4c5b-9a8e-7d6f5e4c3b2a';
@@ -105,5 +106,22 @@ describe('saveProduct grava com segurança', () => {
     const img = db.calls.filter((c) => c.table === 'product_images').map((c) => c.op);
     expect(img).toEqual(['select', 'insert', 'delete']);
     expect(db.calls.at(-1)?.filters).toContain(`id=${OLD_IMG}`);
+  });
+});
+
+describe('vitrine revalidada', () => {
+  beforeEach(() => requireUser.mockResolvedValue({ id: 'u1' }));
+
+  // A página da categoria mãe também lista os produtos das filhas: revalida todas as categorias.
+  it('excluir revalida home, produto e todas as páginas de categoria', async () => {
+    vi.mocked(revalidatePath).mockClear();
+    const db = fakeDb(() => ({ data: { slug: 'iphone-15', categories: { slug: 'iphone' } } }));
+    createClient.mockResolvedValue(db.client);
+    await deleteProduct(ID);
+    expect(vi.mocked(revalidatePath).mock.calls).toEqual([
+      ['/'],
+      ['/produto/iphone-15'],
+      ['/(site)/categoria/[slug]', 'page'],
+    ]);
   });
 });

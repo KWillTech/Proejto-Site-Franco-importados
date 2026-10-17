@@ -6,17 +6,18 @@ import { createClient } from '@/lib/supabase/server';
 import { fieldErrors, isId, productSchema, SAVE_FAILED, slugify, uniqueSlug } from '@/lib/validation';
 
 type Result = { ok: true; id: string } | { ok: false; errors: Record<string, string> };
-type SlugRow = { slug: string; categories: { slug: string } | null };
+type SlugRow = { slug: string };
 
 function checkId(id: unknown): asserts id is string {
   if (!isId(id)) throw new Error('Produto inválido.');
 }
 
-// Vitrine em cache ('use cache'): home, página do produto e categorias afetadas.
-function revalidateStore(productSlug: string, categorySlugs: Array<string | undefined>) {
+// Vitrine em cache ('use cache'): home, página do produto e todas as categorias (a mãe lista os produtos das filhas).
+// O padrão leva o grupo (site): a tag implícita da página é _N_T_/(site)/categoria/[slug]/page.
+function revalidateStore(productSlug: string) {
   revalidatePath('/');
   revalidatePath(`/produto/${productSlug}`);
-  for (const c of new Set(categorySlugs)) if (c) revalidatePath(`/categoria/${c}`);
+  revalidatePath('/(site)/categoria/[slug]', 'page');
 }
 
 // shortcut: produto, variações e fotos são gravados em chamadas separadas, sem transação; na criação uma falha apaga o produto recém-criado, na edição deixa a gravação pela metade (salvar de novo corrige), trocar por uma função RPC se isso acontecer na prática.
@@ -46,17 +47,15 @@ export async function saveProduct(id: string | null, input: unknown): Promise<Re
   };
 
   let slug: string;
-  let oldCategory: string | undefined;
   if (id) {
     // O slug não muda ao editar: links já compartilhados continuam valendo.
-    const { data: current, error } = await supabase.from('products').select('slug, categories(slug)').eq('id', id).maybeSingle<SlugRow>();
+    const { data: current, error } = await supabase.from('products').select('slug').eq('id', id).maybeSingle<SlugRow>();
     if (error) return fail('ler produto', error);
     if (!current) return { ok: false, errors: { form: 'Produto não encontrado.' } };
     const { error: upError } = await supabase.from('products').update(row).eq('id', id);
     if (upError) return fail('atualizar produto', upError);
     productId = id;
     slug = current.slug;
-    oldCategory = current.categories?.slug;
   } else {
     const base = slugify(p.name) || 'produto';
     // base só tem [a-z0-9-]: seguro dentro do like.
@@ -105,7 +104,7 @@ export async function saveProduct(id: string | null, input: unknown): Promise<Re
     if (error) return fail('apagar fotos antigas', error);
   }
 
-  revalidateStore(slug, [category.slug, oldCategory]);
+  revalidateStore(slug);
   return { ok: true, id: productId! }; // os dois ramos acima atribuem; o closure fail impede o TS de estreitar
 }
 
@@ -113,13 +112,13 @@ export async function deleteProduct(id: string): Promise<void> {
   await requireUser();
   checkId(id);
   const supabase = await createClient();
-  const { data, error } = await supabase.from('products').select('slug, categories(slug)').eq('id', id).maybeSingle<SlugRow>();
+  const { data, error } = await supabase.from('products').select('slug').eq('id', id).maybeSingle<SlugRow>();
   if (error || !data) throw new Error('Produto não encontrado.');
   // Variações e fotos saem em cascata.
   // shortcut: os arquivos das fotos ficam no bucket media, limpar órfãos se o espaço do plano gratuito apertar.
   const { error: delError } = await supabase.from('products').delete().eq('id', id);
   if (delError) throw new Error('Não foi possível excluir.');
-  revalidateStore(data.slug, [data.categories?.slug]);
+  revalidateStore(data.slug);
 }
 
 async function updateFlag(id: string, patch: { featured: boolean } | { available: boolean }) {
@@ -127,9 +126,9 @@ async function updateFlag(id: string, patch: { featured: boolean } | { available
   if (typeof Object.values(patch)[0] !== 'boolean') throw new Error('Valor inválido.');
   const supabase = await createClient();
   const { data, error } = await supabase.from('products').update(patch).eq('id', id)
-    .select('slug, categories(slug)').maybeSingle<SlugRow>();
+    .select('slug').maybeSingle<SlugRow>();
   if (error || !data) throw new Error('Não foi possível salvar.');
-  revalidateStore(data.slug, [data.categories?.slug]);
+  revalidateStore(data.slug);
 }
 
 export async function setFeatured(id: string, value: boolean): Promise<void> {

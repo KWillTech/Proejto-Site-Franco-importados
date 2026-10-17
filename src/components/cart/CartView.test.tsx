@@ -61,26 +61,41 @@ describe('CartView', () => {
     expect(screen.getByText('Pedidos pelo WhatsApp estão indisponíveis no momento.')).toBeTruthy();
   });
 
-  it('nome ou cidade em branco impedem o envio', () => {
+  it('nome ou cidade em branco impedem o envio', async () => {
+    vi.mocked(refreshCart).mockResolvedValueOnce([freshOf(iphone)]);
     renderCart([iphone]);
     fireEvent.change(screen.getByLabelText('Nome'), { target: { value: 'Maria' } });
-    const send = screen.getByRole('link', { name: 'Enviar pedido' });
+    const send = await screen.findByRole('link', { name: 'Enviar pedido' });
     // fireEvent devolve false quando o clique foi cancelado (o link não abre).
     expect(fireEvent.click(send)).toBe(false);
     expect(screen.getByText('Informe seu nome e sua cidade.')).toBeTruthy();
   });
 
-  it('com nome e cidade, "Enviar pedido" leva ao WhatsApp com a mensagem em nova aba', () => {
+  it('com nome e cidade, "Enviar pedido" leva ao WhatsApp com a mensagem em nova aba', async () => {
+    vi.mocked(refreshCart).mockResolvedValueOnce([freshOf(iphone)]);
     renderCart([iphone]);
     fireEvent.change(screen.getByLabelText('Nome'), { target: { value: 'Maria Souza' } });
     fireEvent.change(screen.getByLabelText('Cidade'), { target: { value: 'Goiânia - GO' } });
-    const send = screen.getByRole('link', { name: 'Enviar pedido' });
+    const send = await screen.findByRole('link', { name: 'Enviar pedido' });
     expect(send.getAttribute('target')).toBe('_blank');
     expect(send.getAttribute('rel')).toBe('noopener noreferrer');
     const href = send.getAttribute('href')!;
     expect(href.startsWith('https://wa.me/5562999990000?text=')).toBe(true);
     expect(decodeURIComponent(href.split('?text=')[1])).toContain('Nome: Maria Souza\nCidade: Goiânia - GO');
     expect(JSON.parse(localStorage.getItem('franco.customer.v1')!)).toEqual({ name: 'Maria Souza', city: 'Goiânia - GO' });
+  });
+
+  it('enquanto confere os preços, "Enviar pedido" e "Copiar pedido" ficam desabilitados', () => {
+    renderCart([iphone]);
+    expect((screen.getByRole('button', { name: 'Enviar pedido' }) as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByRole('button', { name: 'Copiar pedido' }) as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('depois de conferir os preços, "Enviar pedido" e "Copiar pedido" ficam ativos', async () => {
+    vi.mocked(refreshCart).mockResolvedValueOnce([freshOf(iphone)]);
+    renderCart([iphone]);
+    expect(await screen.findByRole('link', { name: 'Enviar pedido' })).toBeTruthy();
+    expect((screen.getByRole('button', { name: 'Copiar pedido' }) as HTMLButtonElement).disabled).toBe(false);
   });
 
   it('carrinho vazio mostra a mensagem com link para a home', () => {
@@ -127,6 +142,8 @@ describe('CartView', () => {
     expect(await screen.findByText('Não foi possível conferir os preços agora.')).toBeTruthy();
     expect(screen.getByText('iPhone 17 Pro')).toBeTruthy();
     expect(JSON.parse(localStorage.getItem('franco.cart.v1')!)).toEqual([iphone]);
+    expect((screen.getByRole('button', { name: 'Enviar pedido' }) as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByRole('button', { name: 'Copiar pedido' }) as HTMLButtonElement).disabled).toBe(true);
   });
 
   it('linha que chega depois da primeira conferência também é conferida', async () => {

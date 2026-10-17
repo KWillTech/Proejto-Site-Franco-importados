@@ -29,7 +29,7 @@ export async function generateStaticParams() {
 async function CategoryContent({ params, searchParams }: PageProps<'/categoria/[slug]'>) {
   const { slug } = await params;
   const data = await loadCategory(slug);
-  // shortcut: slug fora do generateStaticParams responde 200 com noindex (notFound depois do shell em streaming), trocar por checagem em src/proxy.ts se o SEO exigir 404 real
+  // shortcut: categoria inexistente ou oculta responde 200 com noindex (notFound dentro do Suspense, depois do shell em streaming), trocar por checagem em src/proxy.ts se o SEO exigir 404 real
   if (!data) notFound();
   const raw = (await searchParams).sub;
   const { active, products } = filterBySub(data.products, data.subcategories, typeof raw === 'string' ? raw : undefined);
