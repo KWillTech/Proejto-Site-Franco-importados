@@ -93,6 +93,15 @@ describe('com sessão', () => {
     expect(filters).toEqual([`id.eq.${PARENT}`, `id.eq.${PARENT},parent_id.eq.${ID}`]);
   });
 
+  it('slug da subcategoria nova é <mãe>-<nome>; principal usa só o nome', async () => {
+    fake([{ id: PARENT, parent_id: null, slug: 'xiaomi' }]);
+    await saveCategory(null, { ...child, name: 'Celulares' });
+    expect(sent[0]).toMatchObject({ slug: 'xiaomi-celulares' });
+    fake([]);
+    await saveCategory(null, { ...input, homeCard: false, name: 'Perfumes' });
+    expect(sent[0]).toMatchObject({ slug: 'perfumes' });
+  });
+
   it('não exclui categoria com subcategorias, antes de olhar os produtos', async () => {
     const writes = fake([], { categories: [{ id: 'c1' }], products: [{ id: 'p1' }] });
     expect(await deleteCategory(ID)).toEqual({ ok: false, errors: { form: 'Mova ou exclua as subcategorias antes.' } });

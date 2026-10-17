@@ -22,7 +22,7 @@ export default async function CategoriasPage() {
   return (
     <>
       <h1 className={styles.title}>Categorias</h1>
-      <p className={styles.hint}>A ordem daqui é a do menu da loja. Subcategorias aparecem ao passar o mouse na categoria principal. Até 3 categorias podem aparecer como cartão na home.</p>
+      <p className={styles.hint}>A ordem daqui é a do menu da loja. Cada categoria mostra as subcategorias logo abaixo, recuadas; elas aparecem ao passar o mouse na categoria no menu. Até 3 categorias podem aparecer como cartão na home.</p>
       <CategoriesManager categories={data.map((c) => ({
         id: c.id, name: c.name, parentId: c.parent_id, visible: c.visible, homeCard: c.home_card,
         homeCardImage: c.home_card_image, homeCardTag: c.home_card_tag,

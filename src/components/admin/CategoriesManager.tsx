@@ -12,7 +12,7 @@ export type CategoryItem = {
 
 const EMPTY: CategoryItem = { id: '', name: '', parentId: null, visible: true, homeCard: false, homeCardImage: null, homeCardTag: null };
 
-function CategoryForm({ item, all }: { item: CategoryItem; all: CategoryItem[] }) {
+function CategoryForm({ item, all, sub }: { item: CategoryItem; all: CategoryItem[]; sub: boolean }) {
   const id = item.id || null;
   const [pending, startTransition] = useTransition();
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -27,6 +27,7 @@ function CategoryForm({ item, all }: { item: CategoryItem; all: CategoryItem[] }
   function submit(e: FormEvent) {
     e.preventDefault();
     setSaved(false);
+    if (sub && !parentId) { setErrors({ parentId: 'Escolha a categoria.' }); return; }
     startTransition(async () => {
       try {
         const r = await saveCategory(id, { name, parentId, visible, homeCard, homeCardImage: image, homeCardTag: tag });
@@ -53,7 +54,6 @@ function CategoryForm({ item, all }: { item: CategoryItem; all: CategoryItem[] }
     });
   }
 
-  const hasChildren = all.some((c) => c.parentId === item.id);
   const err = (key: string) => errors[key] && <p className={styles.error} role="alert">{errors[key]}</p>;
   return (
     <form className={styles.form} onSubmit={submit} noValidate>
@@ -62,15 +62,16 @@ function CategoryForm({ item, all }: { item: CategoryItem; all: CategoryItem[] }
         <input value={name} onChange={(e) => setName(e.target.value)} />
         {err('name')}
       </label>
-      <label>
-        Dentro de
-        <select value={parentId} onChange={(e) => setParentId(e.target.value)} disabled={hasChildren}>
-          <option value="">— (categoria principal)</option>
-          {all.filter((c) => !c.parentId && c.id !== item.id).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-        </select>
-        {hasChildren && <span className={styles.muted}>Esta categoria tem subcategorias.</span>}
-        {err('parentId')}
-      </label>
+      {sub && (
+        <label>
+          Categoria
+          <select value={parentId} onChange={(e) => setParentId(e.target.value)}>
+            <option value="">Escolha…</option>
+            {all.filter((c) => !c.parentId).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+          {err('parentId')}
+        </label>
+      )}
       <label className={styles.check}>
         <input type="checkbox" checked={visible} onChange={(e) => setVisible(e.target.checked)} />
         Mostrar no menu
@@ -139,14 +140,18 @@ export function CategoriesManager({ categories }: { categories: CategoryItem[] }
             </div>
             <details>
               <summary>Editar</summary>
-              <CategoryForm item={c} all={categories} />
+              <CategoryForm item={c} all={categories} sub={!!c.parentId} />
             </details>
           </li>
         ))}
       </ul>
       <details className={styles.panel}>
         <summary><strong>Nova categoria</strong></summary>
-        <CategoryForm item={EMPTY} all={categories} />
+        <CategoryForm item={EMPTY} all={categories} sub={false} />
+      </details>
+      <details className={styles.panel}>
+        <summary><strong>Nova subcategoria</strong></summary>
+        <CategoryForm item={EMPTY} all={categories} sub />
       </details>
     </>
   );

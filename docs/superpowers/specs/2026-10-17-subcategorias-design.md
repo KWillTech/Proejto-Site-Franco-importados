@@ -38,12 +38,13 @@ As Global Constraints do plano `docs/superpowers/plans/2026-10-11-loja-franco-im
 
 ## Painel (`/admin/categorias`)
 
-- Formulário de categoria ganha o campo **"Dentro de"**: um select com "— (categoria principal)" e as categorias principais, exceto ela mesma. Uma categoria que já tem subcategorias não pode escolher mãe (campo desabilitado com a explicação "Esta categoria tem subcategorias.").
+- Categorias e subcategorias são criadas separadas: "Nova categoria" (sempre principal, sem campo de mãe; uma principal nunca vira subcategoria) e "Nova subcategoria" (campo obrigatório **"Categoria"**, só principais; editar uma subcategoria permite trocar de mãe).
+- Slug da subcategoria nova = `<slug da mãe>-<nome>` (ex.: `xiaomi-celulares`); renomear ou trocar de mãe não muda o slug.
 - `categorySchema` ganha `parentId` (uuid ou nulo); a action confere os dois níveis antes de gravar e devolve mensagem clara.
 - Lista mostra as subcategorias recuadas sob a mãe. A ordem (subir/descer) vale entre irmãs: principais entre si, subcategorias dentro da mesma mãe. **(escolha minha)**
 - Excluir principal com subcategorias → "Mova ou exclua as subcategorias antes." A regra atual de categoria com produtos continua.
 - Cartão da home continua podendo ser qualquer categoria visível (sem mudança).
-- No cadastro de produto, o select de categoria mostra as subcategorias agrupadas (`<optgroup>` com o nome da principal) e a própria principal como opção. Produto pode ficar direto numa principal. **(escolha minha)**
+- No cadastro de produto, dois selects: **Categoria** (só principais) e **Subcategoria** (filhas da escolhida, com "— nenhuma"; desabilitado sem filhas). Trocar a categoria limpa a subcategoria. Grava-se um só `categoryId` (subcategoria, ou a principal se não houver).
 
 ## Vitrine
 
@@ -56,7 +57,7 @@ As Global Constraints do plano `docs/superpowers/plans/2026-10-11-loja-franco-im
 
 ## Dados existentes
 
-As categorias atuais continuam como principais. A dona cria "Apple"/"Perfumaria" e move as atuais pelo campo "Dentro de". O `seed.sql` pode ganhar um exemplo (ex.: "Apple" com iPhone e MacBook) para desenvolvimento — escolha do builder.
+As categorias atuais continuam como principais. A dona cria "Apple"/"Perfumaria" e cria as subcategorias pelo formulário "Nova subcategoria". O `seed.sql` pode ganhar um exemplo (ex.: "Apple" com iPhone e MacBook) para desenvolvimento — escolha do builder.
 
 ## Regras de borda (escolhas minhas, após o builder check)
 

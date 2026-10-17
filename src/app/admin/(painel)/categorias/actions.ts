@@ -33,17 +33,19 @@ export async function saveCategory(id: string | null, input: unknown): Promise<R
     if ((data ?? []).length >= 3) return fail('Escolha no máximo 3 categorias para a home.', 'homeCard');
   }
 
+  let parentSlug = '';
   // Dois níveis no máximo; o trigger da 0003 garante no banco, aqui é para a mensagem.
   if (c.parentId) {
     if (c.parentId === id) return NOT_ROOT;
     // Uma leitura: a mãe escolhida e, ao editar, as filhas desta categoria (ids já validados como uuid).
     const filter = id ? `id.eq.${c.parentId},parent_id.eq.${id}` : `id.eq.${c.parentId}`;
-    const { data, error } = await supabase.from('categories').select('id, parent_id').or(filter);
+    const { data, error } = await supabase.from('categories').select('id, parent_id, slug').or(filter);
     if (error) return SAVE_FAILED;
-    const rows = (data ?? []) as Array<{ id: string; parent_id: string | null }>;
+    const rows = (data ?? []) as Array<{ id: string; parent_id: string | null; slug: string }>;
     if (id && rows.some((r) => r.parent_id === id)) return fail('Esta categoria tem subcategorias.', 'parentId');
     const parent = rows.find((r) => r.id === c.parentId);
     if (!parent || parent.parent_id) return NOT_ROOT;
+    parentSlug = parent.slug;
   }
 
   const row = {
@@ -58,7 +60,7 @@ export async function saveCategory(id: string | null, input: unknown): Promise<R
     const { data: all, error } = await supabase.from('categories').select('slug, position').order('position', { ascending: false });
     if (error) return SAVE_FAILED;
     const rows = (all ?? []) as Array<{ slug: string; position: number }>;
-    const slug = uniqueSlug(slugify(c.name) || 'categoria', rows.map((r) => r.slug));
+    const slug = uniqueSlug(slugify(`${parentSlug} ${c.name}`) || 'categoria', rows.map((r) => r.slug));
     // shortcut: duas criações simultâneas podem colidir no unique do slug e cair em "Tente de novo", tratar o 23505 se acontecer.
     const { error: insError } = await supabase.from('categories').insert({ ...row, slug, position: (rows[0]?.position ?? -1) + 1 });
     if (insError) return SAVE_FAILED;
