@@ -114,9 +114,9 @@ Foto, nome, preço e os botões "Comprar" e "Espiar". Selos opcionais no canto d
 ### Pix e parcelamento
 
 - **(decisão do cliente)** A loja dá desconto no Pix e parcela no cartão. Os dois são definidos **no cadastro de cada produto**: percentual de desconto no Pix e número de parcelas.
-- Como no mockup, o cartão e a página do produto mostram o preço com Pix em destaque ("R$ … com Pix") e o parcelamento embaixo ("ou 12x de R$ …").
+- Como no mockup, o cartão e a página do produto mostram o preço com Pix em destaque ("R$ … com Pix") e o parcelamento embaixo ("em até Nx", sem valor de parcela).
 - **(escolha minha)** Os dois campos são por produto, não por variação, e são opcionais: sem percentual de Pix, o destaque é o preço normal; sem parcelas, a linha de parcelamento não aparece.
-- **(escolha minha)** O desconto do Pix vale sobre o preço em vigor, seja varejo ou atacado. O parcelamento é calculado sobre o preço sem desconto, sem juros.
+- **(escolha minha)** O desconto do Pix vale sobre o preço em vigor, seja varejo ou atacado. O parcelamento vale sobre o preço sem desconto; juros do parcelamento: consulte o vendedor.
 - **(escolha minha)** O carrinho e a mensagem do WhatsApp mostram o total normal e o total no Pix. **(decisão do cliente, 2026-10-17)** O cliente escolhe a forma de pagamento (Pix, Crédito, Débito, Boleto; no crédito e no boleto, o número de parcelas até o menor limite dos produtos, com o aviso "Juros do parcelamento: consulte o vendedor.") e ela vai na mensagem. A cobrança continua na conversa.
 - **(escolha minha)** Como o percentual varia por produto, a faixa de benefícios diz "Desconto no Pix" sem citar número. O texto da faixa do topo é da dona, editável no painel.
 

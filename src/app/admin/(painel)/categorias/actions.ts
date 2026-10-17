@@ -35,17 +35,25 @@ export async function saveCategory(id: string | null, input: unknown): Promise<R
 
   let parentSlug = '';
   // Dois níveis no máximo; o trigger da 0003 garante no banco, aqui é para a mensagem.
-  if (c.parentId) {
+  if (id || c.parentId) {
     if (c.parentId === id) return NOT_ROOT;
-    // Uma leitura: a mãe escolhida e, ao editar, as filhas desta categoria (ids já validados como uuid).
-    const filter = id ? `id.eq.${c.parentId},parent_id.eq.${id}` : `id.eq.${c.parentId}`;
+    // Uma leitura: ao editar, a própria categoria; e a mãe escolhida (ids já validados como uuid).
+    const filter = [id, c.parentId].filter(Boolean).map((v) => `id.eq.${v}`).join(',');
     const { data, error } = await supabase.from('categories').select('id, parent_id, slug').or(filter);
     if (error) return SAVE_FAILED;
     const rows = (data ?? []) as Array<{ id: string; parent_id: string | null; slug: string }>;
-    if (id && rows.some((r) => r.parent_id === id)) return fail('Esta categoria tem subcategorias.', 'parentId');
-    const parent = rows.find((r) => r.id === c.parentId);
-    if (!parent || parent.parent_id) return NOT_ROOT;
-    parentSlug = parent.slug;
+    if (id) {
+      const current = rows.find((r) => r.id === id);
+      if (!current) return fail('Categoria não encontrada.');
+      // Não troca de nível (principal com filhas viraria terceiro nível); sub -> sub pode trocar de mãe.
+      if (!current.parent_id && c.parentId) return fail('Uma categoria principal não pode virar subcategoria.', 'parentId');
+      if (current.parent_id && !c.parentId) return fail('Escolha a categoria.', 'parentId');
+    }
+    if (c.parentId) {
+      const parent = rows.find((r) => r.id === c.parentId);
+      if (!parent || parent.parent_id) return NOT_ROOT;
+      parentSlug = parent.slug;
+    }
   }
 
   const row = {

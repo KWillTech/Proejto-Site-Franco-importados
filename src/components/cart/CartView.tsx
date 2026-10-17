@@ -143,7 +143,7 @@ export function CartView({ whatsappNumber }: { whatsappNumber: string }) {
             </dl>
             <CustomerForm value={customer} onChange={changeCustomer} maxInstallments={limit} />
             {missingCustomer && !hasCustomer && <p role="alert" className={styles.error}>Informe seu nome e sua cidade.</p>}
-            {!customer.payment && <p className={styles.hint}>Escolha a forma de pagamento.</p>}
+            {!customer.payment && <p role="status" className={styles.hint}>Escolha a forma de pagamento.</p>}
             <div className={styles.actions}>
               {phone && canOrder ? (
                 <a className={`${card.btn} ${card.primary}`} href={whatsappUrl(phone, message)} target="_blank" rel="noopener noreferrer"

@@ -74,23 +74,29 @@ describe('com sessão', () => {
     expect(none).toEqual([]);
   });
 
-  it('recusa dar mãe a categoria que tem subcategorias', async () => {
-    const writes = fake([{ id: PARENT, parent_id: null }, { id: 'c1', parent_id: ID }]);
-    expect(await saveCategory(ID, child)).toEqual({ ok: false, errors: { parentId: 'Esta categoria tem subcategorias.' } });
+  it('principal não vira subcategoria e subcategoria não vira principal', async () => {
+    const writes = fake([{ id: PARENT, parent_id: null }, { id: ID, parent_id: null }]);
+    expect(await saveCategory(ID, child)).toEqual({ ok: false, errors: { parentId: 'Uma categoria principal não pode virar subcategoria.' } });
     expect(writes).toEqual([]);
+    const sub = fake([{ id: ID, parent_id: PARENT }]);
+    expect(await saveCategory(ID, { ...input, homeCard: false })).toEqual({ ok: false, errors: { parentId: 'Escolha a categoria.' } });
+    expect(sub).toEqual([]);
   });
 
-  it('grava parent_id ao criar e ao editar; sem o campo grava null', async () => {
-    const writes = fake([{ id: PARENT, parent_id: null }]);
+  it('grava parent_id ao criar e ao editar; subcategoria pode trocar de mãe', async () => {
+    const OTHER = '2b6c4a2e-1f3d-4c5b-9a8e-7d6f5e4c3b2a';
+    const writes = fake([{ id: PARENT, parent_id: null }, { id: ID, parent_id: OTHER }]);
     expect(await saveCategory(null, child)).toEqual({ ok: true });
     expect(sent[0]).toMatchObject({ parent_id: PARENT });
     expect(await saveCategory(ID, child)).toEqual({ ok: true });
     expect(sent[1]).toMatchObject({ parent_id: PARENT });
+    expect(writes).toEqual(['insert', 'update']);
+    // Ao criar só a mãe; ao editar, a própria categoria e a mãe.
+    expect(filters).toEqual([`id.eq.${PARENT}`, `id.eq.${ID},id.eq.${PARENT}`]);
+    const root = fake([{ id: ID, parent_id: null }]);
     expect(await saveCategory(ID, { ...input, homeCard: false })).toEqual({ ok: true });
-    expect(sent[2]).toMatchObject({ parent_id: null });
-    expect(writes).toEqual(['insert', 'update', 'update']);
-    // Ao criar só a mãe; ao editar, a mãe e as filhas desta categoria.
-    expect(filters).toEqual([`id.eq.${PARENT}`, `id.eq.${PARENT},parent_id.eq.${ID}`]);
+    expect(sent[0]).toMatchObject({ parent_id: null });
+    expect(root).toEqual(['update']);
   });
 
   it('slug da subcategoria nova é <mãe>-<nome>; principal usa só o nome', async () => {

@@ -6,6 +6,7 @@ const PAYMENTS: Payment[] = ['Pix', 'Crédito', 'Débito', 'Boleto'];
 // maxInstallments: limite de parcelas do carrinho; value.installments já chega limitado a ele.
 export function CustomerForm({ value, onChange, maxInstallments }:
   { value: Customer; onChange: (c: Customer) => void; maxInstallments: number }) {
+  const parcels = value.payment === 'Crédito' || value.payment === 'Boleto';
   return (
     <div className={styles.customer}>
       <label>
@@ -28,17 +29,18 @@ export function CustomerForm({ value, onChange, maxInstallments }:
           </label>
         ))}
       </fieldset>
-      {(value.payment === 'Crédito' || value.payment === 'Boleto') && (
-        <>
-          <label>
-            Parcelas
-            <select value={value.installments} onChange={(e) => onChange({ ...value, installments: Number(e.target.value) })}>
-              {Array.from({ length: maxInstallments }, (_, i) => <option key={i} value={i + 1}>{i + 1}x</option>)}
-            </select>
-          </label>
-          {maxInstallments > 1 && <p className={styles.hint}>Juros do parcelamento: consulte o vendedor.</p>}
-        </>
+      {parcels && (
+        <label>
+          Parcelas
+          <select value={value.installments} onChange={(e) => onChange({ ...value, installments: Number(e.target.value) })}>
+            {Array.from({ length: maxInstallments }, (_, i) => <option key={i} value={i + 1}>{i + 1}x</option>)}
+          </select>
+        </label>
       )}
+      {/* Sempre montada para o leitor de tela anunciar o aviso quando ele aparece. */}
+      <div aria-live="polite" className={styles.live}>
+        {parcels && maxInstallments > 1 && <p className={styles.hint}>Juros do parcelamento: consulte o vendedor.</p>}
+      </div>
     </div>
   );
 }

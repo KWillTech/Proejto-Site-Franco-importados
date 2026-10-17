@@ -118,6 +118,9 @@
   height: 18px;
   margin: 0;
 }
+.live:empty {
+  position: absolute; /* vazia, sai do grid sem abrir gap e continua na árvore de acessibilidade */
+}
 .hint {
   color: var(--navy);
   font-size: 12px;
