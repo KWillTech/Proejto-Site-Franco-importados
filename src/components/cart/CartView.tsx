@@ -6,7 +6,7 @@ import { refreshCart } from '@/app/(site)/carrinho/actions';
 import card from '@/components/site/ProductCard.module.css';
 import { QuantityInput } from '@/components/site/QuantityInput';
 import { reconcileCart, UUID } from '@/lib/cart';
-import { formatBRL } from '@/lib/pricing';
+import { formatBRL, maxInstallments } from '@/lib/pricing';
 import { buildOrderMessage, normalizePhone, whatsappUrl, type Customer } from '@/lib/whatsapp';
 import { readCart, useCart } from './CartProvider';
 import styles from './CartView.module.css';
@@ -17,12 +17,18 @@ const CUSTOMER_KEY = 'franco.customer.v1';
 const MAX_CHECK = 100;
 
 // Só é exibido depois de ready (sem HTML do servidor), então ler o localStorage aqui não causa diferença de hidratação.
+// Campos ausentes (dados salvos antes do pagamento existir) ou inválidos viram "sem escolha".
 function loadCustomer(): Customer {
   try {
     const c = JSON.parse(localStorage.getItem(CUSTOMER_KEY) ?? '{}');
-    return { name: typeof c.name === 'string' ? c.name : '', city: typeof c.city === 'string' ? c.city : '' };
+    return {
+      name: typeof c.name === 'string' ? c.name : '',
+      city: typeof c.city === 'string' ? c.city : '',
+      payment: ['Pix', 'Crédito', 'Débito', 'Boleto'].includes(c.payment) ? c.payment : '',
+      installments: Number.isInteger(c.installments) && c.installments >= 1 ? c.installments : 1,
+    };
   } catch {
-    return { name: '', city: '' };
+    return { name: '', city: '', payment: '', installments: 1 };
   }
 }
 
@@ -33,7 +39,7 @@ function wholesaleNote(missing: number): string {
 
 export function CartView({ whatsappNumber }: { whatsappNumber: string }) {
   const { lines, summary, ready, dispatch } = useCart();
-  const [customer, setCustomer] = useState<Customer>(loadCustomer);
+  const [saved, setCustomer] = useState<Customer>(loadCustomer);
   const [notices, setNotices] = useState<string[]>([]);
   const [missingCustomer, setMissingCustomer] = useState(false);
   const [copyStatus, setCopyStatus] = useState('');
@@ -69,9 +75,12 @@ export function CartView({ whatsappNumber }: { whatsappNumber: string }) {
   if (!ready) return <p className="center">Carregando seu carrinho…</p>;
 
   const phone = normalizePhone(whatsappNumber);
+  const limit = maxInstallments(lines);
+  // A parcela salva pode passar do limite do carrinho atual (ele mudou): vale o máximo permitido.
+  const customer = { ...saved, installments: Math.min(saved.installments, limit) };
   const hasCustomer = customer.name.trim() !== '' && customer.city.trim() !== '';
   const message = buildOrderMessage(summary, customer);
-  const canOrder = lines.every((l) => verified.has(l.variantId));
+  const canOrder = lines.every((l) => verified.has(l.variantId)) && customer.payment !== '';
 
   function changeCustomer(c: Customer) {
     setCustomer(c);
@@ -132,8 +141,9 @@ export function CartView({ whatsappNumber }: { whatsappNumber: string }) {
                 <><dt>Total no Pix</dt><dd className={styles.total}>{formatBRL(summary.totalPixCents)}</dd></>
               )}
             </dl>
-            <CustomerForm value={customer} onChange={changeCustomer} />
+            <CustomerForm value={customer} onChange={changeCustomer} maxInstallments={limit} />
             {missingCustomer && !hasCustomer && <p role="alert" className={styles.error}>Informe seu nome e sua cidade.</p>}
+            {!customer.payment && <p className={styles.hint}>Escolha a forma de pagamento.</p>}
             <div className={styles.actions}>
               {phone && canOrder ? (
                 <a className={`${card.btn} ${card.primary}`} href={whatsappUrl(phone, message)} target="_blank" rel="noopener noreferrer"

@@ -1,7 +1,14 @@
 import type { CartSummary } from './types';
 import { formatBRL } from './pricing';
 
-export type Customer = { name: string; city: string };
+export type Payment = 'Pix' | 'Crédito' | 'Débito' | 'Boleto';
+// payment '' = sem escolha (também o caso de dados salvos antes deste campo existir).
+export type Customer = { name: string; city: string; payment: Payment | ''; installments: number };
+
+function paymentLine({ payment, installments }: Customer): string {
+  if (payment !== 'Crédito' && payment !== 'Boleto') return payment;
+  return installments > 1 ? `${payment} em ${installments}x (juros a consultar)` : `${payment} à vista`;
+}
 
 export function normalizePhone(raw: string): string | null {
   const d = raw.replace(/\D/g, '');
@@ -34,6 +41,7 @@ export function buildOrderMessage(summary: CartSummary, customer: Customer): str
     '',
     `Nome: ${clean(customer.name)}`,
     `Cidade: ${clean(customer.city)}`,
+    ...(customer.payment ? [`Pagamento: ${paymentLine(customer)}`] : []),
     `Tipo: ${tipo} (${summary.pieces} ${peças})`,
     '',
     ...items,

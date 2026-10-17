@@ -1,4 +1,4 @@
-import { WHOLESALE_MIN_PIECES, formatBRL, installmentCents, pixCents, unitCents } from '@/lib/pricing';
+import { WHOLESALE_MIN_PIECES, formatBRL, pixCents, unitCents } from '@/lib/pricing';
 import type { Channel } from '@/lib/types';
 import styles from './PriceBlock.module.css';
 
@@ -24,7 +24,7 @@ export function PriceBlock({ retailCents, wholesaleCents, pixPercent, installmen
           <div className={styles.min}>a partir de {WHOLESALE_MIN_PIECES} peças</div>
         </>
       ) : (
-        installments && <div className={styles.inst}>ou {installments}x de {formatBRL(installmentCents(unit, installments))}</div>
+        installments && <div className={styles.inst}>em até {installments}x</div>
       )}
     </div>
   );

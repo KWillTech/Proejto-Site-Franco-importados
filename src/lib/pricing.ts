@@ -13,8 +13,9 @@ export function pixCents(cents: number, pixPercent: number | null): number {
   return Math.round(cents * (100 - pixPercent) / 100);
 }
 
-export function installmentCents(cents: number, installments: number): number {
-  return Math.round(cents / installments);
+// Limite de parcelas do carrinho: o menor entre os produtos; produto sem parcelamento (null) ou carrinho vazio = 1.
+export function maxInstallments(lines: { installments: number | null }[]): number {
+  return lines.length ? Math.min(...lines.map((l) => l.installments ?? 1)) : 1;
 }
 
 export function unitCents(p: { retailCents: number; wholesaleCents: number }, channel: Channel): number {

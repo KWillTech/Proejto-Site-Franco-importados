@@ -15,9 +15,15 @@ test('pedido de atacado chega ao WhatsApp com os dados do cliente', async ({ pag
 
   await page.getByLabel('Nome').fill('Teste');
   await page.getByLabel('Cidade').fill('Goiânia');
+  await expect(page.getByText('Escolha a forma de pagamento.')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Enviar pedido' })).toBeDisabled();
+  // O Khamrah do seed não tem parcelamento: crédito só à vista.
+  await page.getByLabel('Crédito').check();
+  await expect(page.getByLabel('Parcelas').locator('option')).toHaveText(['1x']);
   const href = await page.getByRole('link', { name: 'Enviar pedido' }).getAttribute('href');
   expect(href).toMatch(/^https:\/\/wa\.me\//);
   const text = decodeURIComponent(href!);
   expect(text).toContain('Tipo: ATACADO (10 peças)');
   expect(text).toContain('Nome: Teste');
+  expect(text).toContain('Pagamento: Crédito à vista');
 });

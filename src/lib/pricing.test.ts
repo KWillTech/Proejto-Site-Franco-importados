@@ -1,10 +1,15 @@
 import { expect, test } from 'vitest';
-import { formatBRL, pixCents, installmentCents, summarize } from './pricing';
+import { formatBRL, maxInstallments, pixCents, summarize } from './pricing';
 import { iphone, khamrah } from './test-fixtures';
 
 test('formatBRL', () => { expect(formatBRL(899000)).toBe('R$ 8.990,00'); expect(formatBRL(21990)).toBe('R$ 219,90'); expect(formatBRL(0)).toBe('R$ 0,00'); });
 test('pixCents arredonda por unidade', () => { expect(pixCents(21990, 10)).toBe(19791); expect(pixCents(21990, null)).toBe(21990); expect(pixCents(999, 33)).toBe(669); });
-test('installmentCents', () => { expect(installmentCents(1074532, 12)).toBe(89544); });
+test('maxInstallments: menor entre os produtos; sem parcelas em algum ou carrinho vazio = 1', () => {
+  expect(maxInstallments([iphone, { ...iphone, installments: 3 }])).toBe(3);
+  expect(maxInstallments([iphone])).toBe(12);
+  expect(maxInstallments([iphone, khamrah])).toBe(1);
+  expect(maxInstallments([])).toBe(1);
+});
 test('9 peças é varejo e avisa quanto falta', () => {
   const s = summarize([{ ...khamrah, qty: 9 }]);
   expect(s.channel).toBe('varejo'); expect(s.pieces).toBe(9); expect(s.missingForWholesale).toBe(1);

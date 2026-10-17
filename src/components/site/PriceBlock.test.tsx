@@ -10,7 +10,7 @@ describe('PriceBlock', () => {
   it('varejo mostra Pix e parcelas', () => {
     render(<PriceBlock {...base} channel="varejo" />);
     expect(screen.getByText('R$ 8.703,65 com Pix')).toBeTruthy();
-    expect(screen.getByText('ou 12x de R$ 805,89')).toBeTruthy();
+    expect(screen.getByText('em até 12x')).toBeTruthy();
   });
 
   it('atacado mostra Pix, preço por peça e mínimo, sem parcelas', () => {
@@ -18,7 +18,7 @@ describe('PriceBlock', () => {
     expect(screen.getByText('R$ 8.091,00 com Pix')).toBeTruthy();
     expect(screen.getByText('R$ 8.990,00 por peça')).toBeTruthy();
     expect(screen.getByText('a partir de 10 peças')).toBeTruthy();
-    expect(container.textContent).not.toContain('ou ');
+    expect(container.textContent).not.toContain('em até');
   });
 
   it('sem Pix e sem parcelas mostra só o preço', () => {

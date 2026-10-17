@@ -65,6 +65,7 @@ describe('CartView', () => {
     vi.mocked(refreshCart).mockResolvedValueOnce([freshOf(iphone)]);
     renderCart([iphone]);
     fireEvent.change(screen.getByLabelText('Nome'), { target: { value: 'Maria' } });
+    fireEvent.click(screen.getByLabelText('Pix'));
     const send = await screen.findByRole('link', { name: 'Enviar pedido' });
     // fireEvent devolve false quando o clique foi cancelado (o link não abre).
     expect(fireEvent.click(send)).toBe(false);
@@ -76,13 +77,15 @@ describe('CartView', () => {
     renderCart([iphone]);
     fireEvent.change(screen.getByLabelText('Nome'), { target: { value: 'Maria Souza' } });
     fireEvent.change(screen.getByLabelText('Cidade'), { target: { value: 'Goiânia - GO' } });
+    fireEvent.click(screen.getByLabelText('Pix'));
     const send = await screen.findByRole('link', { name: 'Enviar pedido' });
     expect(send.getAttribute('target')).toBe('_blank');
     expect(send.getAttribute('rel')).toBe('noopener noreferrer');
     const href = send.getAttribute('href')!;
     expect(href.startsWith('https://wa.me/5562999990000?text=')).toBe(true);
-    expect(decodeURIComponent(href.split('?text=')[1])).toContain('Nome: Maria Souza\nCidade: Goiânia - GO');
-    expect(JSON.parse(localStorage.getItem('franco.customer.v1')!)).toEqual({ name: 'Maria Souza', city: 'Goiânia - GO' });
+    expect(decodeURIComponent(href.split('?text=')[1])).toContain('Nome: Maria Souza\nCidade: Goiânia - GO\nPagamento: Pix\n');
+    expect(JSON.parse(localStorage.getItem('franco.customer.v1')!))
+      .toEqual({ name: 'Maria Souza', city: 'Goiânia - GO', payment: 'Pix', installments: 1 });
   });
 
   it('enquanto confere os preços, "Enviar pedido" e "Copiar pedido" ficam desabilitados', () => {
@@ -94,8 +97,54 @@ describe('CartView', () => {
   it('depois de conferir os preços, "Enviar pedido" e "Copiar pedido" ficam ativos', async () => {
     vi.mocked(refreshCart).mockResolvedValueOnce([freshOf(iphone)]);
     renderCart([iphone]);
+    fireEvent.click(screen.getByLabelText('Débito'));
     expect(await screen.findByRole('link', { name: 'Enviar pedido' })).toBeTruthy();
     expect((screen.getByRole('button', { name: 'Copiar pedido' }) as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it('sem forma de pagamento, "Enviar pedido" e "Copiar pedido" ficam desabilitados com aviso', async () => {
+    vi.mocked(refreshCart).mockResolvedValueOnce([freshOf(iphone)]);
+    // Cliente salvo antes do campo de pagamento existir.
+    localStorage.setItem('franco.customer.v1', JSON.stringify({ name: 'Maria', city: 'Rio' }));
+    renderCart([iphone]);
+    await flush();
+    expect((screen.getByLabelText('Pix') as HTMLInputElement).checked).toBe(false);
+    expect((screen.getByRole('button', { name: 'Enviar pedido' }) as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByRole('button', { name: 'Copiar pedido' }) as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByText('Escolha a forma de pagamento.')).toBeTruthy();
+    fireEvent.click(screen.getByLabelText('Pix'));
+    expect(screen.queryByText('Escolha a forma de pagamento.')).toBeNull();
+    expect(screen.getByRole('link', { name: 'Enviar pedido' })).toBeTruthy();
+  });
+
+  it('parcelas só no Crédito e no Boleto, até o menor limite do carrinho, com aviso de juros', () => {
+    renderCart([iphone, { ...khamrah, installments: 3 }]);
+    fireEvent.click(screen.getByLabelText('Pix'));
+    expect(screen.queryByLabelText('Parcelas')).toBeNull();
+    fireEvent.click(screen.getByLabelText('Débito'));
+    expect(screen.queryByLabelText('Parcelas')).toBeNull();
+    for (const forma of ['Crédito', 'Boleto']) {
+      fireEvent.click(screen.getByLabelText(forma));
+      const select = screen.getByLabelText('Parcelas') as HTMLSelectElement;
+      expect([...select.options].map((o) => o.text)).toEqual(['1x', '2x', '3x']);
+      expect(screen.getByText('Juros do parcelamento: consulte o vendedor.')).toBeTruthy();
+    }
+  });
+
+  it('com produto sem parcelamento, só 1x e sem aviso de juros', () => {
+    renderCart([iphone, khamrah]);
+    fireEvent.click(screen.getByLabelText('Crédito'));
+    expect([...(screen.getByLabelText('Parcelas') as HTMLSelectElement).options].map((o) => o.text)).toEqual(['1x']);
+    expect(screen.queryByText('Juros do parcelamento: consulte o vendedor.')).toBeNull();
+  });
+
+  it('parcela escolhida acima do limite atual cai para o máximo, também na mensagem', async () => {
+    vi.mocked(refreshCart).mockResolvedValueOnce([freshOf({ ...iphone, installments: 4 })]);
+    localStorage.setItem('franco.customer.v1', JSON.stringify({ name: 'Maria', city: 'Rio', payment: 'Boleto', installments: 12 }));
+    renderCart([{ ...iphone, installments: 4 }]);
+    expect((screen.getByLabelText('Parcelas') as HTMLSelectElement).value).toBe('4');
+    const href = (await screen.findByRole('link', { name: 'Enviar pedido' })).getAttribute('href')!;
+    expect(decodeURIComponent(href.split('?text=')[1])).toContain('Pagamento: Boleto em 4x (juros a consultar)');
   });
 
   it('carrinho vazio mostra a mensagem com link para a home', () => {
