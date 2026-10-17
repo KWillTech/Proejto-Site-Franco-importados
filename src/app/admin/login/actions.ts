@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
+import { NO_ACCESS } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 
 const loginSchema = z.object({
@@ -21,6 +22,10 @@ export async function signIn(_prev: string | null, formData: FormData): Promise<
     return error.code === 'invalid_credentials' || error.status === 400
       ? 'E-mail ou senha incorretos.'
       : 'Não foi possível entrar agora. Tente de novo em instantes.';
+  }
+  if ((await supabase.rpc('is_admin')).data !== true) {
+    await supabase.auth.signOut({ scope: 'local' });
+    return NO_ACCESS;
   }
   redirect('/admin/produtos');
 }

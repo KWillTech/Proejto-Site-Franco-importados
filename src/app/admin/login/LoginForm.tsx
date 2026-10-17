@@ -4,8 +4,8 @@ import { useActionState, useState } from 'react';
 import styles from '../admin.module.css';
 import { signIn } from './actions';
 
-export function LoginForm() {
-  const [error, action, pending] = useActionState(signIn, null);
+export function LoginForm({ initialError }: { initialError: string | null }) {
+  const [error, action, pending] = useActionState(signIn, initialError);
   // Controlado para o e-mail não sumir quando o React limpa o formulário após um erro.
   const [email, setEmail] = useState('');
   return (

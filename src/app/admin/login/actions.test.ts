@@ -2,11 +2,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const signInWithPassword = vi.fn();
 const signOutFn = vi.fn();
+const rpc = vi.fn();
 const redirect = vi.fn((url: string) => {
   throw new Error(`NEXT_REDIRECT ${url}`);
 });
 vi.mock('@/lib/supabase/server', () => ({
-  createClient: async () => ({ auth: { signInWithPassword, signOut: signOutFn } }),
+  createClient: async () => ({ auth: { signInWithPassword, signOut: signOutFn }, rpc }),
 }));
 vi.mock('next/navigation', () => ({ redirect: (url: string) => redirect(url) }));
 
@@ -23,6 +24,7 @@ beforeEach(() => {
   signInWithPassword.mockReset();
   signOutFn.mockReset().mockResolvedValue({ error: null });
   redirect.mockClear();
+  rpc.mockReset().mockResolvedValue({ data: true, error: null });
 });
 
 describe('signIn', () => {
@@ -51,6 +53,15 @@ describe('signIn', () => {
     signInWithPassword.mockResolvedValue({ data: { user: { id: 'u1' } }, error: null });
     await expect(signIn(null, form(' dona@loja.com ', 'certa'))).rejects.toThrow('NEXT_REDIRECT /admin/produtos');
     expect(signInWithPassword).toHaveBeenCalledWith({ email: 'dona@loja.com', password: 'certa' });
+    expect(signOutFn).not.toHaveBeenCalled();
+  });
+
+  it('conta que não é admin sai na hora e vê o aviso', async () => {
+    signInWithPassword.mockResolvedValue({ data: { user: { id: 'u2' } }, error: null });
+    rpc.mockResolvedValue({ data: false, error: null });
+    expect(await signIn(null, form('estranho@x.com', 'certa'))).toBe('Esta conta não tem acesso ao painel.');
+    expect(signOutFn).toHaveBeenCalledWith({ scope: 'local' });
+    expect(redirect).not.toHaveBeenCalled();
   });
 });
 

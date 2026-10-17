@@ -8,7 +8,6 @@ import { fieldErrors, isId, productSchema, SAVE_FAILED, slugify, uniqueSlug } fr
 type Result = { ok: true; id: string } | { ok: false; errors: Record<string, string> };
 type SlugRow = { slug: string; categories: { slug: string } | null };
 
-
 function checkId(id: unknown): asserts id is string {
   if (!isId(id)) throw new Error('Produto inválido.');
 }
