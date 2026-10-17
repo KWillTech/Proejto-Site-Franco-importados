@@ -16,7 +16,8 @@ export type CartSummary = {
   lines: PricedLine[]; totalCents: number; totalPixCents: number;
 };
 
-export type Category = { id: string; name: string; slug: string; homeCard: boolean; homeCardImage: string | null; homeCardTag: string | null };
+export type Category = { id: string; name: string; slug: string; parentId: string | null; homeCard: boolean; homeCardImage: string | null; homeCardTag: string | null };
+export type MenuCategory = Category & { children: Category[] };
 export type Variant = { id: string; optionValues: string[]; retailCents: number; wholesaleCents: number; available: boolean };
 export type Product = {
   id: string; slug: string; name: string; description: string; categorySlug: string;

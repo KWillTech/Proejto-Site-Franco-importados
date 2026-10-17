@@ -20,7 +20,7 @@ export const instant = false;
 
 // Categorias do menu são pré-geradas; as demais renderizam sob demanda.
 export async function generateStaticParams() {
-  return (await getMenuCategories()).map((c) => ({ slug: c.slug }));
+  return (await getMenuCategories()).flatMap((c) => [c, ...c.children]).map((c) => ({ slug: c.slug }));
 }
 
 export default async function CategoryPage({ params }: PageProps<'/categoria/[slug]'>) {

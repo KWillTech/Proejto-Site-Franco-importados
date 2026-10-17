@@ -8,7 +8,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const url = (path: string) => new URL(path, base).href;
   return [
     { url: url('/') },
-    ...categories.map((c) => ({ url: url(`/categoria/${c.slug}`) })),
+    ...categories.flatMap((c) => [c, ...c.children]).map((c) => ({ url: url(`/categoria/${c.slug}`) })),
     ...slugs.map((s) => ({ url: url(`/produto/${s}`) })),
   ];
 }

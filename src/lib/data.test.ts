@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { mapProduct, fromPrices, isSoldOut, type ProductRow } from './data';
-import type { Product, Variant } from './types';
+import { mapProduct, fromPrices, isSoldOut, filterBySub, type ProductRow } from './data';
+import type { Category, Product, Variant } from './types';
 
 const row = (over: Partial<ProductRow> = {}): ProductRow => ({
   id: 'p1', slug: 'iphone-17-pro', name: 'iPhone 17 Pro', description: 'desc',
@@ -65,5 +65,30 @@ describe('isSoldOut', () => {
   });
   it('é false com produto e variante disponíveis', () => {
     expect(isSoldOut(prod([v()]))).toBe(false);
+  });
+});
+
+describe('filterBySub', () => {
+  const cat = (slug: string): Category => ({
+    id: slug, name: slug, slug, parentId: 'apple', homeCard: false, homeCardImage: null, homeCardTag: null,
+  });
+  const subs = [cat('iphone'), cat('macbook')];
+  const products = [
+    prod([v()], { id: 'a', categorySlug: 'iphone' }),
+    prod([v()], { id: 'b', categorySlug: 'macbook' }),
+    prod([v()], { id: 'c', categorySlug: 'apple' }),
+  ];
+
+  it('filtra pelos produtos da subcategoria escolhida', () => {
+    const r = filterBySub(products, subs, 'iphone');
+    expect(r.active).toBe('iphone');
+    expect(r.products.map((p) => p.id)).toEqual(['a']);
+  });
+  it('mostra todos quando sub é ausente, inválido ou de outra principal', () => {
+    for (const sub of [undefined, 'xyz', 'perfumes', '']) {
+      const r = filterBySub(products, subs, sub);
+      expect(r.active).toBeNull();
+      expect(r.products).toHaveLength(3);
+    }
   });
 });

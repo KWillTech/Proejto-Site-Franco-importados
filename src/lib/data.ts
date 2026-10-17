@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
-import type { Banner, Category, Product, Settings, Variant } from './types';
+import { buildTree } from './categories';
+import type { Banner, Category, MenuCategory, Product, Settings, Variant } from './types';
 
 /** Forma devolvida por PRODUCT_SELECT. */
 export type ProductRow = {
@@ -26,7 +27,7 @@ export type ProductRow = {
 };
 
 type CategoryRow = {
-  id: string; name: string; slug: string; home_card: boolean;
+  id: string; name: string; slug: string; parent_id: string | null; home_card: boolean;
   home_card_image: string | null; home_card_tag: string | null;
 };
 
@@ -35,7 +36,7 @@ export const PRODUCT_SELECT =
   'categories(slug), product_images(url, position), ' +
   'variants(id, option_values, retail_cents, wholesale_cents, available, position)';
 
-const CATEGORY_SELECT = 'id, name, slug, home_card, home_card_image, home_card_tag';
+const CATEGORY_SELECT = 'id, name, slug, parent_id, home_card, home_card_image, home_card_tag';
 
 // Cliente anônimo (somente leitura pública via RLS), criado sob demanda:
 // importar este módulo sem variáveis de ambiente não pode lançar erro.
@@ -98,7 +99,7 @@ export function isSoldOut(p: Product): boolean {
 
 function mapCategory(r: CategoryRow): Category {
   return {
-    id: r.id, name: r.name, slug: r.slug, homeCard: r.home_card,
+    id: r.id, name: r.name, slug: r.slug, parentId: r.parent_id, homeCard: r.home_card,
     homeCardImage: r.home_card_image, homeCardTag: r.home_card_tag,
   };
 }
@@ -115,9 +116,14 @@ export async function getSettings(): Promise<Settings> {
   return { whatsappNumber: data.whatsapp_number, topbarText: data.topbar_text };
 }
 
-export async function getMenuCategories(): Promise<Category[]> {
-  const rows = check(await db().from('categories').select(CATEGORY_SELECT).eq('visible', true).order('position'));
+async function getVisibleCategories(client = db()): Promise<Category[]> {
+  const rows = check(await client.from('categories').select(CATEGORY_SELECT).eq('visible', true).order('position'));
   return (rows as CategoryRow[]).map(mapCategory);
+}
+
+// Filha de mãe oculta fica órfã e buildTree a descarta.
+export async function getMenuCategories(): Promise<MenuCategory[]> {
+  return buildTree(await getVisibleCategories());
 }
 
 export async function getHomeCards(): Promise<Category[]> {
@@ -142,18 +148,26 @@ export async function getFeaturedProducts(): Promise<Product[]> {
   return mapProducts(rows);
 }
 
-export async function getProductsByCategory(
-  slug: string,
-): Promise<{ category: Category; products: Product[] } | null> {
+export async function getProductsByCategory(slug: string): Promise<{
+  category: Category; parent: Category | null; subcategories: Category[]; products: Product[];
+} | null> {
   const client = db();
-  const cat = check(
-    await client.from('categories').select(CATEGORY_SELECT).eq('slug', slug).eq('visible', true).maybeSingle(),
-  ) as CategoryRow | null;
-  if (!cat) return null;
-  const rows = check(
-    await client.from('products').select(PRODUCT_SELECT).eq('category_id', cat.id).order('created_at'),
-  );
-  return { category: mapCategory(cat), products: mapProducts(rows) };
+  const visible = await getVisibleCategories(client);
+  const category = visible.find((c) => c.slug === slug);
+  if (!category) return null;
+  const parent = category.parentId ? visible.find((c) => c.id === category.parentId) : null;
+  if (category.parentId && !parent) return null; // mãe oculta: filha oculta
+  const subcategories = visible.filter((c) => c.parentId === category.id);
+  const ids = [category.id, ...subcategories.map((c) => c.id)];
+  const rows = check(await client.from('products').select(PRODUCT_SELECT).in('category_id', ids).order('created_at'));
+  return { category, parent: parent ?? null, subcategories, products: mapProducts(rows) };
+}
+
+export function filterBySub(
+  products: Product[], subcategories: Category[], sub: string | undefined,
+): { active: string | null; products: Product[] } {
+  const active = subcategories.find((c) => c.slug === sub)?.slug ?? null;
+  return { active, products: active ? products.filter((p) => p.categorySlug === active) : products };
 }
 
 export async function searchProducts(q: string): Promise<Product[]> {
