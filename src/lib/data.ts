@@ -168,6 +168,10 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
   return row ? mapProduct(row as unknown as ProductRow) : null;
 }
 
+export async function getAllProductSlugs(): Promise<string[]> {
+  return check(await db().from('products').select('slug')).map((r) => r.slug as string);
+}
+
 export async function getVariantsByIds(ids: string[]): Promise<Array<{ variant: Variant; product: Product }>> {
   if (ids.length === 0) return [];
   const client = db();

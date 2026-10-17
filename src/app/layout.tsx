@@ -8,7 +8,8 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "Franco Importados",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
+  title: { default: "Franco Importados", template: "%s | Franco Importados" },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

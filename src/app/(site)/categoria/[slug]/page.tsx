@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { ChannelToggle } from '@/components/site/ChannelToggle';
 import { ProductGrid } from '@/components/site/ProductGrid';
@@ -8,6 +9,14 @@ async function loadCategory(slug: string) {
   'use cache';
   return getProductsByCategory(slug);
 }
+
+export async function generateMetadata({ params }: PageProps<'/categoria/[slug]'>): Promise<Metadata> {
+  const data = await loadCategory((await params).slug);
+  return data ? { title: data.category.name } : {};
+}
+
+// Slugs fora do generateStaticParams renderizam sob demanda: a navegação pode bloquear, então a validação de instant não se aplica.
+export const instant = false;
 
 // Categorias do menu são pré-geradas; as demais renderizam sob demanda.
 export async function generateStaticParams() {
