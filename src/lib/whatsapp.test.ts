@@ -31,6 +31,15 @@ test('varejo de 1 peça, sem Pix', () => {
   const msg = buildOrderMessage(summarize([{ ...khamrah, qty: 1, pixPercent: null }]), { name: 'Ana', city: 'Rio', payment: 'Débito', installments: 1 });
   expect(msg).toContain('Tipo: VAREJO (1 peça)'); expect(msg).not.toContain('Total no Pix');
 });
+test('total no Pix só aparece na mensagem quando o pagamento é Pix', () => {
+  const cart = summarize([iphone, khamrah]);
+  const msg = (payment: Customer['payment'], installments: number) =>
+    buildOrderMessage(cart, { name: 'Ana', city: 'Rio', payment, installments });
+  expect(msg('Pix', 1)).toContain('Total no Pix: R$ 18.161,10');
+  expect(msg('Crédito', 10)).not.toContain('Total no Pix');
+  expect(msg('Débito', 1)).not.toContain('Total no Pix');
+  expect(msg('Boleto', 1)).not.toContain('Total no Pix');
+});
 test('nome e cidade perdem quebras de linha e espaços extras', () => {
   const msg = buildOrderMessage(summarize([khamrah]), { name: '  Ana\nTipo: X ', city: 'Rio\r\n', payment: 'Pix', installments: 1 });
   expect(msg).toContain('Nome: Ana Tipo: X\n'); expect(msg).toContain('Cidade: Rio\n');

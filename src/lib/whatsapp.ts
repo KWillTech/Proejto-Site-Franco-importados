@@ -48,7 +48,7 @@ export function buildOrderMessage(summary: CartSummary, customer: Customer): str
     '',
     `Total: ${formatBRL(summary.totalCents)}`,
   ];
-  if (summary.totalPixCents !== summary.totalCents) {
+  if (customer.payment === 'Pix' && summary.totalPixCents !== summary.totalCents) {
     out.push(`Total no Pix: ${formatBRL(summary.totalPixCents)}`);
   }
   return out.join('\n');
