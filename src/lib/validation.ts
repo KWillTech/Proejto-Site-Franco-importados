@@ -114,6 +114,7 @@ export const categorySchema = z.object({
   homeCard: z.boolean(),
   homeCardImage: z.preprocess(emptyToNull, imageUrl.nullable()),
   homeCardTag: z.string().trim().nullable().transform((v) => v || null),
+  parentId: z.preprocess(emptyToNull, z.string().regex(UUID, 'Escolha uma categoria principal.').nullable()),
 });
 
 const imageRequired = (msg: string) => z.string({ error: msg }).min(1, msg).pipe(imageUrl);

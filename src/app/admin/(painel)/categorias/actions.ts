@@ -10,6 +10,7 @@ type Result = { ok: true } | { ok: false; errors: Record<string, string> };
 const fail = (message: string, key = 'form'): Result => ({ ok: false, errors: { [key]: message } });
 const DELETE_FAILED = fail('Não foi possível excluir. Tente de novo.');
 const HAS_PRODUCTS = fail('Mova ou exclua os produtos desta categoria antes.');
+const NOT_ROOT = fail('Escolha uma categoria principal.', 'parentId');
 const done = (): Result => {
   revalidatePath('/', 'layout'); // menu, home e categorias da vitrine
   return { ok: true };
@@ -32,9 +33,22 @@ export async function saveCategory(id: string | null, input: unknown): Promise<R
     if ((data ?? []).length >= 3) return fail('Escolha no máximo 3 categorias para a home.', 'homeCard');
   }
 
+  // Dois níveis no máximo; o trigger da 0003 garante no banco, aqui é para a mensagem.
+  if (c.parentId) {
+    if (c.parentId === id) return NOT_ROOT;
+    // Uma leitura: a mãe escolhida e, ao editar, as filhas desta categoria (ids já validados como uuid).
+    const filter = id ? `id.eq.${c.parentId},parent_id.eq.${id}` : `id.eq.${c.parentId}`;
+    const { data, error } = await supabase.from('categories').select('id, parent_id').or(filter);
+    if (error) return SAVE_FAILED;
+    const rows = (data ?? []) as Array<{ id: string; parent_id: string | null }>;
+    if (id && rows.some((r) => r.parent_id === id)) return fail('Esta categoria tem subcategorias.', 'parentId');
+    const parent = rows.find((r) => r.id === c.parentId);
+    if (!parent || parent.parent_id) return NOT_ROOT;
+  }
+
   const row = {
     name: c.name, visible: c.visible, home_card: c.homeCard,
-    home_card_image: c.homeCardImage, home_card_tag: c.homeCardTag,
+    home_card_image: c.homeCardImage, home_card_tag: c.homeCardTag, parent_id: c.parentId,
   };
   if (id) {
     // O slug não muda ao renomear: links já compartilhados continuam valendo.
@@ -56,11 +70,15 @@ export async function deleteCategory(id: string): Promise<Result> {
   await requireUser();
   if (!isId(id)) return fail('Categoria não encontrada.');
   const supabase = await createClient();
+  const { data: children, error: childError } = await supabase.from('categories').select('id').eq('parent_id', id).limit(1);
+  if (childError) return DELETE_FAILED;
+  if ((children ?? []).length) return fail('Mova ou exclua as subcategorias antes.');
   const { data, error } = await supabase.from('products').select('id').eq('category_id', id).limit(1);
   if (error) return DELETE_FAILED;
   if ((data ?? []).length) return HAS_PRODUCTS;
   const { error: delError } = await supabase.from('categories').delete().eq('id', id);
   // 23503: um produto entrou entre a conferência e a exclusão (a FK é on delete restrict).
+  // shortcut: uma subcategoria criada nesse intervalo também dá 23503 e mostra a mensagem de produtos, raro com uma pessoa no painel; olhar o nome da constraint se confundir.
   if (delError) return delError.code === '23503' ? HAS_PRODUCTS : DELETE_FAILED;
   return done();
 }

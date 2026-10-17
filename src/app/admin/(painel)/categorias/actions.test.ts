@@ -40,16 +40,58 @@ describe('com sessão', () => {
     expect(createClient).not.toHaveBeenCalled();
   });
 
-  // Supabase falso: toda consulta devolve `rows`; registra as gravações.
-  function fake(rows: unknown[]) {
+  // Supabase falso: toda consulta devolve `byTable[tabela]` ou `rows`; registra as gravações e o que foi gravado.
+  let sent: unknown[] = [];
+  function fake(rows: unknown[], byTable: Record<string, unknown[]> = {}) {
     const writes: string[] = [];
-    const b: Record<string, unknown> = {};
-    for (const f of ['select', 'eq', 'neq', 'order', 'limit']) b[f] = () => b;
-    for (const f of ['insert', 'update', 'delete']) b[f] = () => { writes.push(f); return b; };
-    b.then = (ok: (r: unknown) => void) => ok({ data: rows, error: null });
-    createClient.mockResolvedValue({ from: () => b });
+    sent = [];
+    createClient.mockResolvedValue({
+      from: (table: string) => {
+        const b: Record<string, unknown> = {};
+        for (const f of ['select', 'eq', 'neq', 'or', 'order', 'limit']) b[f] = () => b;
+        for (const f of ['insert', 'update', 'delete']) b[f] = (v?: unknown) => { writes.push(f); sent.push(v); return b; };
+        b.then = (ok: (r: unknown) => void) => ok({ data: byTable[table] ?? rows, error: null });
+        return b;
+      },
+    });
     return writes;
   }
+
+  const PARENT = '1b6c4a2e-1f3d-4c5b-9a8e-7d6f5e4c3b2a';
+  const child = { ...input, homeCard: false, parentId: PARENT };
+  const PRINCIPAL = { ok: false, errors: { parentId: 'Escolha uma categoria principal.' } };
+
+  it('recusa mãe que já é subcategoria, que não existe ou que é a própria categoria', async () => {
+    const writes = fake([{ id: PARENT, parent_id: ID }]);
+    expect(await saveCategory(null, child)).toEqual(PRINCIPAL);
+    fake([]);
+    expect(await saveCategory(null, child)).toEqual(PRINCIPAL);
+    expect(await saveCategory(ID, { ...child, parentId: ID })).toEqual(PRINCIPAL);
+    expect(writes).toEqual([]);
+  });
+
+  it('recusa dar mãe a categoria que tem subcategorias', async () => {
+    const writes = fake([{ id: PARENT, parent_id: null }, { id: 'c1', parent_id: ID }]);
+    expect(await saveCategory(ID, child)).toEqual({ ok: false, errors: { parentId: 'Esta categoria tem subcategorias.' } });
+    expect(writes).toEqual([]);
+  });
+
+  it('grava parent_id ao criar e ao editar; sem o campo grava null', async () => {
+    const writes = fake([{ id: PARENT, parent_id: null }]);
+    expect(await saveCategory(null, child)).toEqual({ ok: true });
+    expect(sent[0]).toMatchObject({ parent_id: PARENT });
+    expect(await saveCategory(ID, child)).toEqual({ ok: true });
+    expect(sent[1]).toMatchObject({ parent_id: PARENT });
+    expect(await saveCategory(ID, { ...input, homeCard: false })).toEqual({ ok: true });
+    expect(sent[2]).toMatchObject({ parent_id: null });
+    expect(writes).toEqual(['insert', 'update', 'update']);
+  });
+
+  it('não exclui categoria com subcategorias, antes de olhar os produtos', async () => {
+    const writes = fake([], { categories: [{ id: 'c1' }], products: [{ id: 'p1' }] });
+    expect(await deleteCategory(ID)).toEqual({ ok: false, errors: { form: 'Mova ou exclua as subcategorias antes.' } });
+    expect(writes).toEqual([]);
+  });
 
   it('recusa o quarto cartão da home', async () => {
     const writes = fake([{ id: 'a' }, { id: 'b' }, { id: 'c' }]);
@@ -66,7 +108,7 @@ describe('com sessão', () => {
   });
 
   it('não exclui categoria com produtos', async () => {
-    const writes = fake([{ id: 'p1' }]);
+    const writes = fake([], { products: [{ id: 'p1' }] });
     expect(await deleteCategory(ID)).toEqual({ ok: false, errors: { form: 'Mova ou exclua os produtos desta categoria antes.' } });
     expect(writes).toEqual([]);
   });

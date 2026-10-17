@@ -164,6 +164,12 @@ describe('categorySchema', () => {
     expect(msgs(categorySchema, { ...ok, name: '  ' })).toEqual({ name: 'Informe o nome da categoria.' });
     expect(categorySchema.parse(ok).homeCardTag).toBeNull();
   });
+  it('categoria mãe: vazia ou ausente vira null, uuid passa, resto é recusado', () => {
+    expect(categorySchema.parse({ ...ok, parentId: '' }).parentId).toBeNull();
+    expect(categorySchema.parse(ok).parentId).toBeNull();
+    expect(categorySchema.parse({ ...ok, parentId: CAT }).parentId).toBe(CAT);
+    expect(msgs(categorySchema, { ...ok, parentId: 'abc' })).toEqual({ parentId: 'Escolha uma categoria principal.' });
+  });
 });
 
 describe('bannerSchema', () => {
