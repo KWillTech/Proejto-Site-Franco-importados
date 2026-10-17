@@ -168,6 +168,7 @@ describe('categorySchema', () => {
     expect(categorySchema.parse({ ...ok, parentId: '' }).parentId).toBeNull();
     expect(categorySchema.parse(ok).parentId).toBeNull();
     expect(categorySchema.parse({ ...ok, parentId: CAT }).parentId).toBe(CAT);
+    expect(categorySchema.parse({ ...ok, parentId: CAT.toUpperCase() }).parentId).toBe(CAT);
     expect(msgs(categorySchema, { ...ok, parentId: 'abc' })).toEqual({ parentId: 'Escolha uma categoria principal.' });
   });
 });

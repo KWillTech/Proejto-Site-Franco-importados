@@ -114,7 +114,8 @@ export const categorySchema = z.object({
   homeCard: z.boolean(),
   homeCardImage: z.preprocess(emptyToNull, imageUrl.nullable()),
   homeCardTag: z.string().trim().nullable().transform((v) => v || null),
-  parentId: z.preprocess(emptyToNull, z.string().regex(UUID, 'Escolha uma categoria principal.').nullable()),
+  // Minúsculas: a action compara com ids vindos do banco, que o Postgres devolve em minúsculas.
+  parentId: z.preprocess(emptyToNull, z.string().regex(UUID, 'Escolha uma categoria principal.').transform((v) => v.toLowerCase()).nullable()),
 });
 
 const imageRequired = (msg: string) => z.string({ error: msg }).min(1, msg).pipe(imageUrl);

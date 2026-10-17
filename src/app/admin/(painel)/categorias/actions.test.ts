@@ -42,13 +42,16 @@ describe('com sessão', () => {
 
   // Supabase falso: toda consulta devolve `byTable[tabela]` ou `rows`; registra as gravações e o que foi gravado.
   let sent: unknown[] = [];
+  let filters: unknown[] = [];
   function fake(rows: unknown[], byTable: Record<string, unknown[]> = {}) {
     const writes: string[] = [];
     sent = [];
+    filters = [];
     createClient.mockResolvedValue({
       from: (table: string) => {
         const b: Record<string, unknown> = {};
-        for (const f of ['select', 'eq', 'neq', 'or', 'order', 'limit']) b[f] = () => b;
+        for (const f of ['select', 'eq', 'neq', 'order', 'limit']) b[f] = () => b;
+        b.or = (v: unknown) => { filters.push(v); return b; };
         for (const f of ['insert', 'update', 'delete']) b[f] = (v?: unknown) => { writes.push(f); sent.push(v); return b; };
         b.then = (ok: (r: unknown) => void) => ok({ data: byTable[table] ?? rows, error: null });
         return b;
@@ -64,10 +67,11 @@ describe('com sessão', () => {
   it('recusa mãe que já é subcategoria, que não existe ou que é a própria categoria', async () => {
     const writes = fake([{ id: PARENT, parent_id: ID }]);
     expect(await saveCategory(null, child)).toEqual(PRINCIPAL);
-    fake([]);
+    expect(writes).toEqual([]);
+    const none = fake([]);
     expect(await saveCategory(null, child)).toEqual(PRINCIPAL);
     expect(await saveCategory(ID, { ...child, parentId: ID })).toEqual(PRINCIPAL);
-    expect(writes).toEqual([]);
+    expect(none).toEqual([]);
   });
 
   it('recusa dar mãe a categoria que tem subcategorias', async () => {
@@ -85,6 +89,8 @@ describe('com sessão', () => {
     expect(await saveCategory(ID, { ...input, homeCard: false })).toEqual({ ok: true });
     expect(sent[2]).toMatchObject({ parent_id: null });
     expect(writes).toEqual(['insert', 'update', 'update']);
+    // Ao criar só a mãe; ao editar, a mãe e as filhas desta categoria.
+    expect(filters).toEqual([`id.eq.${PARENT}`, `id.eq.${PARENT},parent_id.eq.${ID}`]);
   });
 
   it('não exclui categoria com subcategorias, antes de olhar os produtos', async () => {

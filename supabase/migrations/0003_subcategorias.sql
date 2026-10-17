@@ -1,6 +1,8 @@
 -- Franco Importados: subcategorias (categoria mãe), dois níveis no máximo.
--- O painel já confere as regras antes de gravar; o trigger abaixo garante no banco mesmo se duas gravações
--- se cruzarem (um check não enxerga a linha da mãe, por isso trigger).
+-- O painel já confere as regras antes de gravar; o trigger abaixo confere de novo no banco (um check não
+-- enxerga a linha da mãe, por isso trigger). Gravações simultâneas: o trigger trava a própria linha (for update)
+-- e a da mãe (for share), então quem chega depois espera e confere de novo; um 3º nível montado em duas
+-- gravações cruzadas é recusado, e um ciclo A<->B simultâneo vira deadlock (o Postgres aborta uma das duas).
 -- As políticas de RLS da 0002 já cobrem public.categories; nada muda nelas.
 --
 -- Rode inteiro no SQL Editor do Supabase, depois da 0002 e antes de publicar o app com subcategorias
@@ -26,7 +28,13 @@ begin
   if new.parent_id = new.id then
     raise exception 'Uma categoria não pode ser mãe de si mesma.';
   end if;
-  if exists (select 1 from public.categories where id = new.parent_id and parent_id is not null) then
+  -- Trava a própria linha antes de olhar as filhas: quem tenta pôr uma filha nela (for share abaixo) espera.
+  if tg_op = 'UPDATE' then
+    perform 1 from public.categories where id = new.id for update;
+  end if;
+  -- Trava a mãe: ela não ganha mãe enquanto esta gravação não termina.
+  perform 1 from public.categories where id = new.parent_id and parent_id is null for share;
+  if not found then
     raise exception 'A categoria mãe precisa ser uma categoria principal.';
   end if;
   if exists (select 1 from public.categories where parent_id = new.id) then
