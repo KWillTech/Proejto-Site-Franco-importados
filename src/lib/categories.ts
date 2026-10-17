@@ -16,3 +16,13 @@ export function moveAmongSiblings(rows: Array<{ id: string; parentId: string | n
   [ids[a], ids[b]] = [ids[b], ids[a]];
   return ids;
 }
+
+// Ids para filtrar por slug (?cat=): principal = ela + filhas, filha = só ela; inválido/repetido = null (sem filtro).
+export function categoryFilterIds(
+  rows: Array<{ id: string; slug: string; parentId: string | null }>,
+  slug: string | string[] | undefined,
+): string[] | null {
+  const me = typeof slug === 'string' ? rows.find((r) => r.slug === slug) : undefined;
+  if (!me) return null;
+  return [me.id, ...rows.filter((r) => r.parentId === me.id).map((r) => r.id)];
+}

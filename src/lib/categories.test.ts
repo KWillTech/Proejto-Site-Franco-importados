@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildTree, moveAmongSiblings } from './categories';
+import { buildTree, categoryFilterIds, moveAmongSiblings } from './categories';
 
 const row = (id: string, parentId: string | null = null) => ({ id, parentId });
 
@@ -26,5 +26,25 @@ describe('moveAmongSiblings', () => {
   it('devolve null na ponta', () => {
     expect(moveAmongSiblings(rows, 'A', -1)).toBeNull();
     expect(moveAmongSiblings(rows, 'a2', 1)).toBeNull();
+  });
+});
+
+describe('categoryFilterIds', () => {
+  const cats = [
+    { id: 'A', slug: 'a', parentId: null },
+    { id: 'a1', slug: 'a-1', parentId: 'A' },
+    { id: 'B', slug: 'b', parentId: null },
+  ];
+  it('principal inclui as filhas', () => {
+    expect(categoryFilterIds(cats, 'a')).toEqual(['A', 'a1']);
+  });
+  it('filha só ela mesma', () => {
+    expect(categoryFilterIds(cats, 'a-1')).toEqual(['a1']);
+  });
+  it('slug inválido ou ausente não filtra', () => {
+    expect(categoryFilterIds(cats, 'x')).toBeNull();
+    expect(categoryFilterIds(cats, '')).toBeNull();
+    expect(categoryFilterIds(cats, ['a', 'b'])).toBeNull();
+    expect(categoryFilterIds(cats, undefined)).toBeNull();
   });
 });
