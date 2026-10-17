@@ -36,6 +36,8 @@ export function buildOrderMessage(summary: CartSummary, customer: Customer): str
     return [title, detail];
   });
 
+  const juros = (customer.payment === 'Crédito' || customer.payment === 'Boleto') && customer.installments > 1 ? ' + juros a consultar' : '';
+
   const out = [
     'Olá! Quero fazer um pedido pelo site.',
     '',
@@ -46,7 +48,7 @@ export function buildOrderMessage(summary: CartSummary, customer: Customer): str
     '',
     ...items,
     '',
-    `Total: ${formatBRL(summary.totalCents)}`,
+    `Total: ${formatBRL(summary.totalCents)}${juros}`,
   ];
   if (customer.payment === 'Pix' && summary.totalPixCents !== summary.totalCents) {
     out.push(`Total no Pix: ${formatBRL(summary.totalPixCents)}`);

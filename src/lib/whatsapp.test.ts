@@ -40,6 +40,16 @@ test('total no Pix só aparece na mensagem quando o pagamento é Pix', () => {
   expect(msg('Débito', 1)).not.toContain('Total no Pix');
   expect(msg('Boleto', 1)).not.toContain('Total no Pix');
 });
+test('linha do total indica juros a consultar só no parcelado de Crédito e Boleto', () => {
+  const totalLine = (payment: Customer['payment'], installments: number) =>
+    buildOrderMessage(summarize([iphone, khamrah]), { name: 'Ana', city: 'Rio', payment, installments }).split('\n').find((l) => l.startsWith('Total:'));
+  expect(totalLine('Crédito', 10)).toBe('Total: R$ 20.179,00 + juros a consultar');
+  expect(totalLine('Boleto', 2)).toBe('Total: R$ 20.179,00 + juros a consultar');
+  expect(totalLine('Crédito', 1)).toBe('Total: R$ 20.179,00');
+  expect(totalLine('Boleto', 1)).toBe('Total: R$ 20.179,00');
+  expect(totalLine('Pix', 1)).toBe('Total: R$ 20.179,00');
+  expect(totalLine('Débito', 1)).toBe('Total: R$ 20.179,00');
+});
 test('nome e cidade perdem quebras de linha e espaços extras', () => {
   const msg = buildOrderMessage(summarize([khamrah]), { name: '  Ana\nTipo: X ', city: 'Rio\r\n', payment: 'Pix', installments: 1 });
   expect(msg).toContain('Nome: Ana Tipo: X\n'); expect(msg).toContain('Cidade: Rio\n');
