@@ -1,12 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { useRef } from 'react';
-import type { Category } from '@/lib/types';
+import { Fragment, useRef } from 'react';
+import type { MenuCategory } from '@/lib/types';
 import styles from './MobileMenu.module.css';
 
 // Popover nativo: abre pelo botão do cabeçalho, fecha com Esc ou clique fora.
-export function MobileMenu({ categories }: { categories: Category[] }) {
+export function MobileMenu({ categories }: { categories: MenuCategory[] }) {
   const ref = useRef<HTMLElement>(null);
   const close = () => ref.current?.hidePopover();
   return (
@@ -18,7 +18,12 @@ export function MobileMenu({ categories }: { categories: Category[] }) {
       </button>
       <Link href="/" onClick={close}>Início</Link>
       {categories.map((c) => (
-        <Link key={c.id} href={`/categoria/${c.slug}`} onClick={close}>{c.name}</Link>
+        <Fragment key={c.id}>
+          <Link href={`/categoria/${c.slug}`} onClick={close}>{c.name}</Link>
+          {c.children.map((s) => (
+            <Link key={s.id} href={`/categoria/${s.slug}`} className={styles.sub} onClick={close}>{s.name}</Link>
+          ))}
+        </Fragment>
       ))}
     </nav>
   );

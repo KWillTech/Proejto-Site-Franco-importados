@@ -126,12 +126,15 @@ export async function getMenuCategories(): Promise<MenuCategory[]> {
   return buildTree(await getVisibleCategories());
 }
 
+// Filha de mãe oculta tem link 404: fica fora dos cartões.
+export function pickHomeCards(visible: Category[]): Category[] {
+  return visible
+    .filter((c) => c.homeCard && (!c.parentId || visible.some((p) => p.id === c.parentId)))
+    .slice(0, 3);
+}
+
 export async function getHomeCards(): Promise<Category[]> {
-  const rows = check(
-    await db().from('categories').select(CATEGORY_SELECT)
-      .eq('visible', true).eq('home_card', true).order('position').limit(3),
-  );
-  return (rows as CategoryRow[]).map(mapCategory);
+  return pickHomeCards(await getVisibleCategories());
 }
 
 export async function getActiveBanners(): Promise<Banner[]> {

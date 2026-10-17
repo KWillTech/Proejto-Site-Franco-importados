@@ -1,7 +1,7 @@
 -- ATENÇÃO: ESTE SCRIPT APAGA TODO O CATÁLOGO (categorias, produtos, variações,
 -- imagens e banners) antes de inserir os dados de exemplo (fictícios).
 -- Use SOMENTE na configuração inicial, nunca depois que a loja tiver dados reais.
--- Rode DEPOIS de 0001_init.sql, no SQL Editor do Supabase. Não mexe em "settings".
+-- Rode DEPOIS de 0001_init.sql e 0003_subcategorias.sql, no SQL Editor do Supabase. Não mexe em "settings".
 
 begin;
 
@@ -12,12 +12,16 @@ delete from public.banners;
 delete from public.categories;
 
 insert into public.categories (name, slug, position, visible, home_card, home_card_image, home_card_tag) values
+  ('Apple', 'apple', 0, true, false, null, null),
   ('iPhone', 'iphone', 1, true, true, '/placeholders/card-iphone.svg', 'ORIGINAIS · LACRADOS'),
   ('MacBook', 'macbook', 2, true, true, '/placeholders/card-macbook.svg', 'ORIGINAIS · LACRADOS'),
   ('PlayStation', 'playstation', 3, true, false, null, null),
   ('Xiaomi', 'xiaomi', 4, true, false, null, null),
   ('Perfumes árabes', 'perfumes-arabes', 5, true, true, '/placeholders/card-perfumes-arabes.svg', 'IMPORTADOS · ÁRABES'),
   ('Perfumes importados', 'perfumes-importados', 6, true, false, null, null);
+
+update public.categories set parent_id = (select id from public.categories where slug = 'apple')
+where slug in ('iphone', 'macbook');
 
 insert into public.products (category_id, name, slug, description, featured, available, badge, pix_percent, installments, option_names, created_at)
 select c.id, v.name, v.slug, v.description, v.featured, v.available, v.badge, v.pix_percent, v.installments, v.option_names, now() + v.ord * interval '1 second'

@@ -22,6 +22,10 @@
   padding: 0 24px;
   border-bottom: 0.8px solid rgba(14, 23, 51, 0.2);
 }
+.menu a.sub {
+  padding-left: 44px;
+  font-weight: 400;
+}
 .close {
   align-self: flex-end;
   width: 30px;

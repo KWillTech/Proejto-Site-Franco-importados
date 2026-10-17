@@ -12,6 +12,32 @@
   line-height: 50px;
   padding: 0 15px;
 }
+.item {
+  display: inline-block;
+  position: relative;
+}
+.sub {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 20;
+  min-width: 100%;
+  margin: 0;
+  padding: 6px 0;
+  list-style: none;
+  text-align: left;
+  background: #fff;
+  box-shadow: 0 6px 16px rgba(14, 23, 51, 0.12);
+}
+.item:hover .sub,
+.item:focus-within .sub {
+  display: block;
+}
+.sub a {
+  display: block;
+  white-space: nowrap;
+}
 @media (max-width: 767px) {
   .nav {
     display: none;

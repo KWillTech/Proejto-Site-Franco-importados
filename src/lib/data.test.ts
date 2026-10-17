@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { mapProduct, fromPrices, isSoldOut, filterBySub, type ProductRow } from './data';
+import { mapProduct, fromPrices, isSoldOut, filterBySub, pickHomeCards, type ProductRow } from './data';
 import type { Category, Product, Variant } from './types';
 
 const row = (over: Partial<ProductRow> = {}): ProductRow => ({
@@ -90,5 +90,15 @@ describe('filterBySub', () => {
       expect(r.active).toBeNull();
       expect(r.products).toHaveLength(3);
     }
+  });
+});
+
+describe('pickHomeCards', () => {
+  const c = (id: string, over: Partial<Category> = {}): Category => ({
+    id, name: id, slug: id, parentId: null, homeCard: true, homeCardImage: null, homeCardTag: null, ...over,
+  });
+  it('descarta cartão de subcategoria cuja mãe não está visível e limita a 3', () => {
+    const visible = [c('a'), c('filha-ok', { parentId: 'a' }), c('filha-orfa', { parentId: 'oculta' }), c('b'), c('d'), c('x', { homeCard: false })];
+    expect(pickHomeCards(visible).map((x) => x.id)).toEqual(['a', 'filha-ok', 'b']);
   });
 });
