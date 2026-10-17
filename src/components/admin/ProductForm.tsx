@@ -4,11 +4,12 @@ import { useRouter } from 'next/navigation';
 import { useState, useTransition, type FormEvent } from 'react';
 import { deleteProduct, saveProduct } from '@/app/admin/(painel)/produtos/actions';
 import styles from '@/app/admin/admin.module.css';
+import { buildTree } from '@/lib/categories';
 import { parseMoney, type ProductInput } from '@/lib/validation';
 import { ImageUploader } from './ImageUploader';
 import { VariantsEditor, firstError, newRow, type VariantRow } from './VariantsEditor';
 
-type Props = { id: string | null; categories: Array<{ id: string; name: string }>; initial: ProductInput | null };
+type Props = { id: string | null; categories: Array<{ id: string; name: string; parentId: string | null }>; initial: ProductInput | null };
 
 const toMoney = (cents: number) => (cents / 100).toFixed(2).replace('.', ',');
 // Vazio vira null (campo opcional); texto inválido vira NaN e o productSchema recusa com mensagem.
@@ -82,7 +83,14 @@ export function ProductForm({ id, categories, initial }: Props) {
         Categoria
         <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
           <option value="">Escolha…</option>
-          {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          {buildTree(categories).map((c) => c.children.length === 0
+            ? <option key={c.id} value={c.id}>{c.name}</option>
+            : (
+              <optgroup key={c.id} label={c.name}>
+                <option value={c.id}>{c.name}</option>
+                {c.children.map((k) => <option key={k.id} value={k.id}>{k.name}</option>)}
+              </optgroup>
+            ))}
         </select>
         {fieldError('categoryId')}
       </label>

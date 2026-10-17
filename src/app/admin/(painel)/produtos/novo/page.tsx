@@ -9,12 +9,12 @@ export const instant = false;
 export default async function NovoProdutoPage() {
   await requireUser();
   const supabase = await createClient();
-  const { data: categories, error } = await supabase.from('categories').select('id, name').order('position');
+  const { data: categories, error } = await supabase.from('categories').select('id, name, parent_id').order('position');
   if (error) throw new Error(error.message);
   return (
     <>
       <h1 className={styles.title}>Novo produto</h1>
-      <ProductForm id={null} categories={categories} initial={null} />
+      <ProductForm id={null} categories={categories.map((c) => ({ id: c.id, name: c.name, parentId: c.parent_id }))} initial={null} />
     </>
   );
 }

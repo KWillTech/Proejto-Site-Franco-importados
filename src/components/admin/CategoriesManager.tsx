@@ -3,20 +3,22 @@
 import { useState, useTransition, type FormEvent } from 'react';
 import { deleteCategory, reorderCategories, saveCategory } from '@/app/admin/(painel)/categorias/actions';
 import styles from '@/app/admin/admin.module.css';
+import { buildTree, moveAmongSiblings } from '@/lib/categories';
 import { ImageUploader } from './ImageUploader';
 
 export type CategoryItem = {
-  id: string; name: string; visible: boolean; homeCard: boolean; homeCardImage: string | null; homeCardTag: string | null;
+  id: string; name: string; parentId: string | null; visible: boolean; homeCard: boolean; homeCardImage: string | null; homeCardTag: string | null;
 };
 
-const EMPTY: CategoryItem = { id: '', name: '', visible: true, homeCard: false, homeCardImage: null, homeCardTag: null };
+const EMPTY: CategoryItem = { id: '', name: '', parentId: null, visible: true, homeCard: false, homeCardImage: null, homeCardTag: null };
 
-function CategoryForm({ item }: { item: CategoryItem }) {
+function CategoryForm({ item, all }: { item: CategoryItem; all: CategoryItem[] }) {
   const id = item.id || null;
   const [pending, startTransition] = useTransition();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saved, setSaved] = useState(false);
   const [name, setName] = useState(item.name);
+  const [parentId, setParentId] = useState(item.parentId ?? '');
   const [visible, setVisible] = useState(item.visible);
   const [homeCard, setHomeCard] = useState(item.homeCard);
   const [image, setImage] = useState(item.homeCardImage ?? '');
@@ -27,11 +29,11 @@ function CategoryForm({ item }: { item: CategoryItem }) {
     setSaved(false);
     startTransition(async () => {
       try {
-        const r = await saveCategory(id, { name, visible, homeCard, homeCardImage: image, homeCardTag: tag });
+        const r = await saveCategory(id, { name, parentId, visible, homeCard, homeCardImage: image, homeCardTag: tag });
         setErrors(r.ok ? {} : r.errors);
         setSaved(r.ok);
         if (r.ok && !id) {
-          setName(''); setVisible(true); setHomeCard(false); setImage(''); setTag('');
+          setName(''); setParentId(''); setVisible(true); setHomeCard(false); setImage(''); setTag('');
         }
       } catch {
         setErrors({ form: 'Não foi possível salvar. Tente de novo.' });
@@ -51,6 +53,7 @@ function CategoryForm({ item }: { item: CategoryItem }) {
     });
   }
 
+  const hasChildren = all.some((c) => c.parentId === item.id);
   const err = (key: string) => errors[key] && <p className={styles.error} role="alert">{errors[key]}</p>;
   return (
     <form className={styles.form} onSubmit={submit} noValidate>
@@ -58,6 +61,15 @@ function CategoryForm({ item }: { item: CategoryItem }) {
         Nome
         <input value={name} onChange={(e) => setName(e.target.value)} />
         {err('name')}
+      </label>
+      <label>
+        Dentro de
+        <select value={parentId} onChange={(e) => setParentId(e.target.value)} disabled={hasChildren}>
+          <option value="">— (categoria principal)</option>
+          {all.filter((c) => !c.parentId && c.id !== item.id).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+        </select>
+        {hasChildren && <span className={styles.muted}>Esta categoria tem subcategorias.</span>}
+        {err('parentId')}
       </label>
       <label className={styles.check}>
         <input type="checkbox" checked={visible} onChange={(e) => setVisible(e.target.checked)} />
@@ -92,9 +104,9 @@ export function CategoriesManager({ categories }: { categories: CategoryItem[] }
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  function move(i: number, to: number) {
-    const ids = categories.map((c) => c.id);
-    [ids[i], ids[to]] = [ids[to], ids[i]];
+  function move(id: string, dir: -1 | 1) {
+    const ids = moveAmongSiblings(categories, id, dir);
+    if (!ids) return;
     startTransition(async () => {
       try {
         const r = await reorderCategories(ids);
@@ -105,34 +117,36 @@ export function CategoriesManager({ categories }: { categories: CategoryItem[] }
     });
   }
 
+  const rows = buildTree(categories).flatMap((c) => [c, ...c.children.map((k) => ({ ...k, child: true as const, parentHidden: !c.visible }))]);
+
   return (
     <>
       {error && <p className={styles.error} role="alert">{error}</p>}
       <ul className={styles.list}>
-        {categories.map((c, i) => (
-          <li className={styles.panel} key={c.id}>
+        {rows.map((c) => (
+          <li className={styles.panel} key={c.id} style={'child' in c ? { marginLeft: 24 } : undefined}>
             <div className={styles.panelHead}>
               <div className={styles.info}>
                 <strong>{c.name}</strong>
                 <span className={styles.muted}>
-                  {c.visible ? 'No menu' : 'Oculta'}{c.homeCard && ' · Cartão da home'}
+                  {c.visible ? 'No menu' : 'Oculta'}{'parentHidden' in c && c.parentHidden && ' · oculta pela categoria mãe'}{c.homeCard && ' · Cartão da home'}
                 </span>
               </div>
               <div className={styles.imgActions}>
-                <button type="button" className={styles.btn} disabled={pending || i === 0} onClick={() => move(i, i - 1)} aria-label={`Subir ${c.name}`}>↑</button>
-                <button type="button" className={styles.btn} disabled={pending || i === categories.length - 1} onClick={() => move(i, i + 1)} aria-label={`Descer ${c.name}`}>↓</button>
+                <button type="button" className={styles.btn} disabled={pending || !moveAmongSiblings(categories, c.id, -1)} onClick={() => move(c.id, -1)} aria-label={`Subir ${c.name}`}>↑</button>
+                <button type="button" className={styles.btn} disabled={pending || !moveAmongSiblings(categories, c.id, 1)} onClick={() => move(c.id, 1)} aria-label={`Descer ${c.name}`}>↓</button>
               </div>
             </div>
             <details>
               <summary>Editar</summary>
-              <CategoryForm item={c} />
+              <CategoryForm item={c} all={categories} />
             </details>
           </li>
         ))}
       </ul>
       <details className={styles.panel}>
         <summary><strong>Nova categoria</strong></summary>
-        <CategoryForm item={EMPTY} />
+        <CategoryForm item={EMPTY} all={categories} />
       </details>
     </>
   );

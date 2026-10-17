@@ -21,7 +21,7 @@ export default async function EditarProdutoPage({ params }: PageProps<'/admin/pr
     supabase.from('products')
       .select(`${PRODUCT_SELECT}, category_id`)
       .eq('id', id).maybeSingle<Row>(),
-    supabase.from('categories').select('id, name').order('position'),
+    supabase.from('categories').select('id, name, parent_id').order('position'),
   ]);
   if (product.error) throw new Error(product.error.message);
   if (categories.error) throw new Error(categories.error.message);
@@ -37,7 +37,7 @@ export default async function EditarProdutoPage({ params }: PageProps<'/admin/pr
   return (
     <>
       <h1 className={styles.title}>Editar produto</h1>
-      <ProductForm id={id} categories={categories.data} initial={initial} />
+      <ProductForm id={id} categories={categories.data.map((c) => ({ id: c.id, name: c.name, parentId: c.parent_id }))} initial={initial} />
     </>
   );
 }
