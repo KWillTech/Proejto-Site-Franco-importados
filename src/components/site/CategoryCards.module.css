@@ -56,6 +56,15 @@
   height: 100%;
   object-fit: cover;
 }
+/* Funde a base da foto no azul da faixa "Conheça todos". */
+.photo::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: 32%;
+  background: linear-gradient(to bottom, rgba(14, 23, 51, 0) 0%, rgba(14, 23, 51, 0.55) 45%, var(--navy) 100%);
+  pointer-events: none;
+}
 .txt {
   background: var(--navy);
   color: #fff;
