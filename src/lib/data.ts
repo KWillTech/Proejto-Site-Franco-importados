@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { buildTree } from './categories';
 import type { Banner, Category, MenuCategory, Product, Settings, Variant } from './types';
+import { mapSettings, type SettingsRow } from './settings';
 
 /** Forma devolvida por PRODUCT_SELECT. */
 export type ProductRow = {
@@ -115,12 +116,11 @@ function mapProducts(rows: unknown): Product[] {
   return (rows as ProductRow[]).flatMap((r) => forStorefront(r) ?? []);
 }
 
+// select('*'): o site continua no ar se o código subir antes da migração 0006 (colunas do rodapé).
 export async function getSettings(): Promise<Settings> {
-  const data = check(
-    await db().from('settings').select('whatsapp_number, topbar_text').eq('id', 1).maybeSingle(),
-  ) as { whatsapp_number: string; topbar_text: string } | null;
+  const data = check(await db().from('settings').select('*').eq('id', 1).maybeSingle()) as SettingsRow | null;
   if (!data) throw new Error('Linha de configurações (settings id=1) não encontrada.');
-  return { whatsappNumber: data.whatsapp_number, topbarText: data.topbar_text };
+  return mapSettings(data);
 }
 
 async function getVisibleCategories(client = db()): Promise<Category[]> {

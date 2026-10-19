@@ -26,4 +26,5 @@ export type Product = {
   optionNames: string[]; variants: Variant[];
 };
 export type Banner = { id: string; imageDesktop: string; imageMobile: string; alt: string; link: string | null };
-export type Settings = { whatsappNumber: string; topbarText: string };
+export type FooterSettings = { hours: string; email: string; payment: string; shipping: string; copyright: string };
+export type Settings = { whatsappNumber: string; topbarText: string; footer: FooterSettings };

@@ -23,7 +23,7 @@ async function Shell({ children }: { children: ReactNode }) {
       <Nav categories={categories} />
       <MobileMenu categories={categories} />
       <ChannelProvider>{children}</ChannelProvider>
-      <Footer phone={phone} whatsappHref={whatsappHref} />
+      <Footer phone={phone} whatsappHref={whatsappHref} texts={settings.footer} />
       {whatsappHref && <WhatsAppFloat href={whatsappHref} />}
     </>
   );
