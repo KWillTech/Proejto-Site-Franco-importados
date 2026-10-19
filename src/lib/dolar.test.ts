@@ -55,6 +55,12 @@ describe('refreshUsdRate', () => {
     expect(update).not.toHaveBeenCalled();
   });
 
+  it('a busca tem timeout (API pendurada não trava o save nem o cron)', async () => {
+    api({ USDBRL: { ask: '0' } });
+    await refreshUsdRate(supabase);
+    expect(vi.mocked(fetch)).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ signal: expect.any(AbortSignal) }));
+  });
+
   it('HTTP não-ok devolve null', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
     api({ USDBRL: { ask: '5.4' } }, false);

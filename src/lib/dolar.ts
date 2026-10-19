@@ -16,7 +16,7 @@ export function priceCents(costUsdCents: number, rate: number, marginCents: numb
 /** Busca a cotação, grava em settings e recalcula os preços. Nunca lança. */
 export async function refreshUsdRate(supabase: SupabaseClient): Promise<number | null> {
   try {
-    const res = await fetch(API, { cache: 'no-store' });
+    const res = await fetch(API, { cache: 'no-store', signal: AbortSignal.timeout(8000) });
     if (!res.ok) throw new Error(`AwesomeAPI HTTP ${res.status}`);
     const rate = parseUsdRate(await res.json());
     if (rate === null) throw new Error('cotação inválida');
