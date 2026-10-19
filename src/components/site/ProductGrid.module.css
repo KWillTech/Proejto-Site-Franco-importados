@@ -20,3 +20,14 @@
     padding: 0 18px;
   }
 }
+
+/* Acabamento no padrão do painel: no celular os cartões ocupam a largura toda. */
+@media (max-width: 767px) {
+  .grid {
+    padding: 0;
+    margin: 0 -6px 30px;
+  }
+  .col {
+    padding: 0 6px;
+  }
+}
