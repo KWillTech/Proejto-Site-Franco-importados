@@ -1,7 +1,6 @@
 import { ProductForm } from '@/components/admin/ProductForm';
 import { requireUser } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import styles from '../../../admin.module.css';
 
 // Painel lê a sessão a cada requisição: bloqueia no servidor em vez de mostrar um esqueleto.
 export const instant = false;
@@ -12,9 +11,6 @@ export default async function NovoProdutoPage() {
   const { data: categories, error } = await supabase.from('categories').select('id, name, parent_id').order('position');
   if (error) throw new Error(error.message);
   return (
-    <>
-      <h1 className={styles.title}>Novo produto</h1>
-      <ProductForm id={null} categories={categories.map((c) => ({ id: c.id, name: c.name, parentId: c.parent_id }))} initial={null} />
-    </>
+    <ProductForm id={null} categories={categories.map((c) => ({ id: c.id, name: c.name, parentId: c.parent_id }))} initial={null} />
   );
 }
