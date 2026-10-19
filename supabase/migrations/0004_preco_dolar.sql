@@ -26,6 +26,8 @@ alter table public.variant_costs enable row level security;
 revoke all on public.variant_costs from anon;
 -- service_role: o cron chama recalc_prices() com ela, e a função lê esta tabela.
 grant select, insert, update, delete on public.variant_costs to authenticated, service_role;
+-- O cron grava a cotação e recalcula como service_role; a 0001 só dá grants explícitos a anon e authenticated.
+grant select, update on public.variants, public.settings to service_role;
 
 drop policy if exists "variant_costs_select" on public.variant_costs;
 drop policy if exists "variant_costs_insert" on public.variant_costs;
