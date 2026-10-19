@@ -37,4 +37,13 @@ describe('CalculoTable', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Salvar alterações' }));
     expect(saveCosts).toHaveBeenCalledWith([{ variantId: B, costUsdCents: 100, marginCents: null }]);
   });
+
+  it('filtros separam o que está na vitrine e mostram a contagem', () => {
+    render(<CalculoTable rows={[row(A, 100, 500), row(B, null, null)]} rate={5} rateAt={null} />);
+    fireEvent.click(screen.getByRole('button', { name: /Na vitrine/ }));
+    expect(screen.queryByText('fora da vitrine')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: /Fora da vitrine/ }));
+    expect(screen.getByText('fora da vitrine')).toBeTruthy();
+    expect(screen.queryByLabelText('Custo em dólar de Produto 1 (Único)')).toBeNull();
+  });
 });

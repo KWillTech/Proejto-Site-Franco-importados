@@ -1,7 +1,6 @@
 import { CalculoTable, type CostRow } from '@/components/admin/CalculoTable';
 import { requireUser } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import styles from '../../admin.module.css';
 
 type ProductRow = {
   name: string;
@@ -41,9 +40,6 @@ export default async function CalculoPage() {
   const rate = settings.data.usd_rate === null ? null : Number(settings.data.usd_rate);
 
   return (
-    <>
-      <h1 className={styles.title}>Cálculo</h1>
-      <CalculoTable rows={rows} rate={rate} rateAt={settings.data.usd_rate_at} />
-    </>
+    <CalculoTable rows={rows} rate={rate} rateAt={settings.data.usd_rate_at} />
   );
 }
