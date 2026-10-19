@@ -2,7 +2,6 @@ import { SettingsForm } from '@/components/admin/SettingsForm';
 import { requireUser } from '@/lib/auth';
 import { mapSettings, type SettingsRow } from '@/lib/settings';
 import { createClient } from '@/lib/supabase/server';
-import styles from '../../admin.module.css';
 
 // Painel lê a sessão a cada requisição: bloqueia no servidor em vez de mostrar um esqueleto.
 export const instant = false;
@@ -15,9 +14,6 @@ export default async function ConfiguracoesPage() {
   const s = mapSettings(data as SettingsRow);
 
   return (
-    <>
-      <h1 className={styles.title}>Configurações</h1>
-      <SettingsForm whatsappNumber={s.whatsappNumber} topbarText={s.topbarText} footer={s.footer} />
-    </>
+    <SettingsForm whatsappNumber={s.whatsappNumber} topbarText={s.topbarText} footer={s.footer} />
   );
 }

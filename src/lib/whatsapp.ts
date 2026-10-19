@@ -10,6 +10,12 @@ function paymentLine({ payment, installments }: Customer): string {
   return installments > 1 ? `${payment} em ${installments}x (juros a consultar)` : `${payment} à vista`;
 }
 
+// 55 + DDD + 9 dígitos vira (DDD) NNNNN-NNNN; outros formatos aparecem como +número.
+export function displayPhone(phone: string): string {
+  const m = /^55(\d{2})(\d{5})(\d{4})$/.exec(phone);
+  return m ? `(${m[1]}) ${m[2]}-${m[3]}` : `+${phone}`;
+}
+
 export function normalizePhone(raw: string): string | null {
   const d = raw.replace(/\D/g, '');
   if (d.length === 10 || d.length === 11) return '55' + d;
