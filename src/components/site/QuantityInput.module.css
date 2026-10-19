@@ -25,3 +25,23 @@
 .qty input::-webkit-inner-spin-button {
   appearance: none;
 }
+
+/* Acabamento no padrão do painel */
+.qty {
+  border: 1px solid #d9dde5;
+  border-radius: 999px;
+  background: #fbfbfd;
+}
+.qty button,
+.qty input {
+  background: transparent;
+  height: 40px;
+}
+.qty button {
+  font-size: 18px;
+  color: var(--navy);
+  transition: background 0.15s;
+}
+.qty button:hover {
+  background: #eef0f4;
+}

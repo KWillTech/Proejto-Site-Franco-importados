@@ -6,7 +6,7 @@ import { refreshCart } from '@/app/(site)/carrinho/actions';
 import card from '@/components/site/ProductCard.module.css';
 import { QuantityInput } from '@/components/site/QuantityInput';
 import { reconcileCart, UUID } from '@/lib/cart';
-import { formatBRL, maxInstallments } from '@/lib/pricing';
+import { formatBRL, maxInstallments, WHOLESALE_MIN_PIECES } from '@/lib/pricing';
 import { buildOrderMessage, normalizePhone, whatsappUrl, type Customer } from '@/lib/whatsapp';
 import { readCart, useCart } from './CartProvider';
 import styles from './CartView.module.css';
@@ -132,7 +132,13 @@ export function CartView({ whatsappNumber }: { whatsappNumber: string }) {
             ))}
           </ul>
           <aside className={styles.summary}>
-            <p className={styles.note}>{wholesaleNote(summary.missingForWholesale)}</p>
+            <h2 className={styles.sumTitle}>Resumo do pedido</h2>
+            <div className={styles.progress}>
+              <p className={styles.note}>{wholesaleNote(summary.missingForWholesale)}</p>
+              <div className={styles.track} aria-hidden="true">
+                <i style={{ width: `${Math.min(100, (summary.pieces / WHOLESALE_MIN_PIECES) * 100)}%` }} />
+              </div>
+            </div>
             <dl>
               <dt>Tipo</dt><dd>{summary.channel === 'atacado' ? 'Atacado' : 'Varejo'}</dd>
               <dt>Peças</dt><dd>{summary.pieces}</dd>
@@ -159,7 +165,7 @@ export function CartView({ whatsappNumber }: { whatsappNumber: string }) {
                 <button type="button" className={`${card.btn} ${card.primary}`} disabled>Enviar pedido</button>
               )}
               <button type="button" className={`${card.btn} ${card.secondary}`} onClick={copy} disabled={!canOrder}>Copiar pedido</button>
-              <button type="button" className={`${card.btn} ${card.secondary}`}
+              <button type="button" className={`${card.btn} ${card.secondary} ${styles.clear}`}
                 onClick={() => window.confirm('Esvaziar o carrinho?') && dispatch({ type: 'clear' })}>
                 Esvaziar carrinho
               </button>
