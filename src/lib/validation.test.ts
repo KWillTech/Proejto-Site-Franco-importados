@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bannerSchema, categorySchema, isId, parseMoney, productSchema, settingsSchema, slugify, uniqueSlug, validateImageFile } from './validation';
+import { bannerSchema, categorySchema, costsSchema, isId, parseMoney, productSchema, settingsSchema, slugify, uniqueSlug, validateImageFile } from './validation';
 
 const CAT = '0b6c4a2e-1f3d-4c5b-9a8e-7d6f5e4c3b2a';
 const base = {
@@ -185,5 +185,16 @@ describe('isId', () => {
     expect(isId(`${CAT}x`)).toBe(false);
     expect(isId('1')).toBe(false);
     expect(isId(null)).toBe(false);
+  });
+});
+
+describe('costsSchema', () => {
+  const row = (costUsdCents: number, marginCents: number) => [{ variantId: CAT, costUsdCents, marginCents }];
+  it('aceita até 99_999_999 em custo e margem', () => {
+    expect(costsSchema.safeParse(row(99_999_999, 99_999_999)).success).toBe(true);
+  });
+  it('rejeita 100_000_000 (o preço calculado estouraria int4)', () => {
+    expect(costsSchema.safeParse(row(100_000_000, 0)).success).toBe(false);
+    expect(costsSchema.safeParse(row(0, 100_000_000)).success).toBe(false);
   });
 });

@@ -129,7 +129,8 @@ export function fieldErrors(error: z.ZodError): Record<string, string> {
   return errors;
 }
 
-const cents = z.number().int().min(0, 'Valor inválido.').nullable();
+// Teto: 99_999_999 × cotação máx. 20 + margem máx. cabe em int4 (recalc_prices faz ::int).
+const cents = z.number().int().min(0, 'Valor inválido.').max(99_999_999, 'Valor inválido.').nullable();
 
 // shortcut: até 2000 variações por envio, trocar por lotes se o catálogo passar disso
 export const costsSchema = z.array(z.object({
