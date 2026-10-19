@@ -71,7 +71,7 @@ const NEW_ID = '9a6c4a2e-1f3d-4c5b-9a8e-7d6f5e4c3b2a';
 const valid = {
   name: 'Khamrah', categoryId: ID, description: '', badge: null, featured: false, available: true,
   pixPercent: null, installments: null, optionNames: [],
-  variants: [{ optionValues: [], retailCents: 34990, wholesaleCents: 21990, available: true }],
+  variants: [{ optionValues: [], available: true }],
   images: ['/placeholders/a.svg'],
 };
 
@@ -106,6 +106,28 @@ describe('saveProduct grava com segurança', () => {
     const img = db.calls.filter((c) => c.table === 'product_images').map((c) => c.op);
     expect(img).toEqual(['select', 'insert', 'delete']);
     expect(db.calls.at(-1)?.filters).toContain(`id=${OLD_IMG}`);
+  });
+  // O preço vem da aba Cálculo (recalc_prices): o cadastro não pode sobrescrevê-lo.
+  it('variação existente é atualizada sem preço; a nova entra com preço 0', async () => {
+    const VAR_ID = '5c6c4a2e-1f3d-4c5b-9a8e-7d6f5e4c3b2a';
+    const db = fakeDb((c) => {
+      if (c.table === 'categories') return { data: { slug: 'perfumes' } };
+      if (c.table === 'products' && c.op === 'select') return { data: { slug: 'khamrah' } };
+      if (c.table === 'variants' && c.op === 'select') return { data: [{ id: VAR_ID }] };
+      return { data: [] };
+    });
+    createClient.mockResolvedValue(db.client);
+    const input = {
+      ...valid, optionNames: ['Tamanho'],
+      variants: [{ id: VAR_ID, optionValues: ['100ml'], available: true }, { optionValues: ['50ml'], available: true }],
+    };
+    expect(await saveProduct(ID, input)).toEqual({ ok: true, id: ID });
+    const update = db.calls.find((c) => c.table === 'variants' && c.op === 'update');
+    const insert = db.calls.find((c) => c.table === 'variants' && c.op === 'insert');
+    expect(update?.payload).not.toHaveProperty('retail_cents');
+    expect(update?.payload).not.toHaveProperty('wholesale_cents');
+    expect(insert?.payload).toMatchObject({ option_values: ['50ml'], retail_cents: 0, wholesale_cents: 0, product_id: ID });
+    expect(insert?.payload).not.toHaveProperty('priced');
   });
 });
 

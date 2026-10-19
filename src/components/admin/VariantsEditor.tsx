@@ -2,10 +2,10 @@
 
 import styles from '@/app/admin/admin.module.css';
 
-export type VariantRow = { key: string; id?: string; optionValues: string[]; retail: string; wholesale: string; available: boolean };
+export type VariantRow = { key: string; id?: string; optionValues: string[]; available: boolean };
 
 export const newRow = (options: number): VariantRow =>
-  ({ key: crypto.randomUUID(), optionValues: Array(options).fill(''), retail: '', wholesale: '', available: true });
+  ({ key: crypto.randomUUID(), optionValues: Array(options).fill(''), available: true });
 
 type Props = {
   optionNames: string[];
@@ -14,7 +14,7 @@ type Props = {
   onChange: (optionNames: string[], rows: VariantRow[]) => void;
 };
 
-// Primeira mensagem cujo caminho começa com o prefixo (ex.: "variants.2" pega varejo, atacado e valores).
+// Primeira mensagem cujo caminho começa com o prefixo (ex.: "variants.2" pega os valores das opções).
 export const firstError = (errors: Record<string, string>, prefix: string) =>
   Object.entries(errors).find(([k]) => k === prefix || k.startsWith(`${prefix}.`))?.[1];
 
@@ -25,10 +25,11 @@ export function VariantsEditor({ optionNames, rows, errors, onChange }: Props) {
 
   return (
     <fieldset className={styles.box}>
-      <legend>Variações e preços</legend>
+      <legend>Variações</legend>
       <p className={styles.hint}>
-        Opções como Cor ou Armazenamento (até 3), uma linha por combinação. Sem opções, o produto tem um único preço.
+        Opções como Cor ou Armazenamento (até 3), uma linha por combinação. Sem opções, o produto tem uma única variação.
       </p>
+      <p className={styles.hint}>O preço é calculado na aba Cálculo.</p>
       {optionNames.map((name, k) => (
         <div className={styles.row} key={k}>
           <label>
@@ -77,14 +78,6 @@ export function VariantsEditor({ optionNames, rows, errors, onChange }: Props) {
                 />
               </label>
             ))}
-            <label>
-              Varejo (R$)
-              <input inputMode="decimal" placeholder="0,00" value={row.retail} onChange={(e) => setRow(i, { retail: e.target.value })} />
-            </label>
-            <label>
-              Atacado (R$)
-              <input inputMode="decimal" placeholder="0,00" value={row.wholesale} onChange={(e) => setRow(i, { wholesale: e.target.value })} />
-            </label>
             <label className={styles.check}>
               <input type="checkbox" checked={row.available} onChange={(e) => setRow(i, { available: e.target.checked })} />
               Disponível

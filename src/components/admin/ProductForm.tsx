@@ -5,13 +5,12 @@ import { useState, useTransition, type FormEvent } from 'react';
 import { deleteProduct, saveProduct } from '@/app/admin/(painel)/produtos/actions';
 import styles from '@/app/admin/admin.module.css';
 import { splitCategory } from '@/lib/categories';
-import { parseMoney, type ProductInput } from '@/lib/validation';
+import type { ProductInput } from '@/lib/validation';
 import { ImageUploader } from './ImageUploader';
 import { VariantsEditor, firstError, newRow, type VariantRow } from './VariantsEditor';
 
 type Props = { id: string | null; categories: Array<{ id: string; name: string; parentId: string | null }>; initial: ProductInput | null };
 
-const toMoney = (cents: number) => (cents / 100).toFixed(2).replace('.', ',');
 // Vazio vira null (campo opcional); texto inválido vira NaN e o productSchema recusa com mensagem.
 const toNumber = (s: string) => (s.trim() === '' ? null : Number(s.replace(',', '.')));
 
@@ -32,8 +31,7 @@ export function ProductForm({ id, categories, initial }: Props) {
   const [optionNames, setOptionNames] = useState(initial?.optionNames ?? []);
   const [rows, setRows] = useState<VariantRow[]>(() =>
     initial?.variants.map((v) => ({
-      key: v.id ?? crypto.randomUUID(), id: v.id, optionValues: v.optionValues,
-      retail: toMoney(v.retailCents), wholesale: toMoney(v.wholesaleCents), available: v.available,
+      key: v.id ?? crypto.randomUUID(), id: v.id, optionValues: v.optionValues, available: v.available,
     })) ?? [newRow(0)],
   );
   const [images, setImages] = useState(initial?.images ?? []);
@@ -43,10 +41,7 @@ export function ProductForm({ id, categories, initial }: Props) {
     const input = {
       name, categoryId: subId || categoryId, description, badge: badge || null, featured, available,
       pixPercent: toNumber(pix), installments: toNumber(installments), optionNames, images,
-      variants: rows.map((r) => ({
-        id: r.id, optionValues: r.optionValues, available: r.available,
-        retailCents: parseMoney(r.retail), wholesaleCents: parseMoney(r.wholesale),
-      })),
+      variants: rows.map((r) => ({ id: r.id, optionValues: r.optionValues, available: r.available })),
     };
     startTransition(async () => {
       try {

@@ -79,14 +79,12 @@ export async function saveProduct(id: string | null, input: unknown): Promise<Re
     if (error) return fail('apagar variações', error);
   }
   for (const [position, v] of p.variants.entries()) {
-    const values = {
-      option_values: v.optionValues, retail_cents: v.retailCents, wholesale_cents: v.wholesaleCents,
-      available: v.available, position,
-    };
+    // O preço é gravado por recalc_prices (aba Cálculo): o update não o toca; a nova entra com 0 e priced false (fora da vitrine).
+    const values = { option_values: v.optionValues, available: v.available, position };
     // id de outro produto (cliente adulterado) não está em kept: vira variação nova deste produto.
     const { error } = v.id && kept.has(v.id)
       ? await supabase.from('variants').update(values).eq('id', v.id).eq('product_id', productId)
-      : await supabase.from('variants').insert({ ...values, product_id: productId });
+      : await supabase.from('variants').insert({ ...values, retail_cents: 0, wholesale_cents: 0, product_id: productId });
     if (error) return fail('gravar variação', error);
   }
 

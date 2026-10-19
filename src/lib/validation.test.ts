@@ -7,8 +7,8 @@ const base = {
   featured: false, available: true, pixPercent: 10, installments: 12,
   optionNames: ['Cor', 'Armazenamento'],
   variants: [
-    { optionValues: ['Azul', '256GB'], retailCents: 967072, wholesaleCents: 899000, available: true },
-    { optionValues: ['Preto', '256GB'], retailCents: 967072, wholesaleCents: 899000, available: true },
+    { optionValues: ['Azul', '256GB'], available: true },
+    { optionValues: ['Preto', '256GB'], available: true },
   ],
   images: ['https://x.supabase.co/storage/v1/object/public/media/produtos/a.jpg'],
 };
@@ -64,17 +64,6 @@ describe('productSchema', () => {
 
   it('recusa produto sem variação', () => {
     expect(errorsOf({ ...base, variants: [] }).variants).toBe('Cadastre ao menos uma variação.');
-  });
-
-  it('recusa atacado maior que varejo', () => {
-    const variants = [{ ...base.variants[0], wholesaleCents: 967073 }];
-    expect(errorsOf({ ...base, variants })['variants.0.wholesaleCents'])
-      .toBe('O preço de atacado não pode ser maior que o de varejo.');
-  });
-
-  it('recusa preço zero', () => {
-    const variants = [{ ...base.variants[0], retailCents: 0, wholesaleCents: 0 }];
-    expect(errorsOf({ ...base, variants })['variants.0.retailCents']).toBe('Informe um preço maior que zero.');
   });
 
   it('recusa Pix 0, negativo ou acima de 100', () => {

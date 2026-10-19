@@ -7,7 +7,7 @@ export type ProductInput = {
   featured: boolean; available: boolean;
   pixPercent: number | null; installments: number | null;
   optionNames: string[];                       // 0 a 3 nomes
-  variants: Array<{ id?: string; optionValues: string[]; retailCents: number; wholesaleCents: number; available: boolean }>;
+  variants: Array<{ id?: string; optionValues: string[]; available: boolean }>;
   images: string[];
 };
 
@@ -17,13 +17,10 @@ export const SAVE_FAILED = { ok: false, errors: { form: 'Não foi possível salv
 
 const PIX_MSG = 'O desconto no Pix deve ser maior que 0% e no máximo 100%.';
 const INSTALLMENTS_MSG = 'As parcelas devem ser um número inteiro de 1 a 24.';
-const PRICE_MSG = 'Informe um preço válido.';
 
 // Campo opcional do formulário: vazio vira null.
 const emptyToNull = (v: unknown) => (v === '' || v === undefined ? null : v);
 
-// Teto de R$ 999.999,99: a coluna é int e o valor digitado não pode estourar.
-const cents = z.number({ error: PRICE_MSG }).int(PRICE_MSG).positive('Informe um preço maior que zero.').max(99_999_999, PRICE_MSG);
 const text = z.string().trim();
 
 const imageUrl = z.string().regex(/^(https?:\/\/|\/(?![\/\\]))\S+$/, 'Imagem inválida.');
@@ -31,11 +28,7 @@ const imageUrl = z.string().regex(/^(https?:\/\/|\/(?![\/\\]))\S+$/, 'Imagem inv
 const variantSchema = z.object({
   id: z.string().regex(UUID).optional(),
   optionValues: z.array(text.min(1, 'Preencha todas as opções desta variação.')),
-  retailCents: cents,
-  wholesaleCents: cents,
   available: z.boolean(),
-}).refine((v) => v.wholesaleCents <= v.retailCents, {
-  path: ['wholesaleCents'], message: 'O preço de atacado não pode ser maior que o de varejo.',
 });
 
 export const productSchema: z.ZodType<ProductInput> = z.object({

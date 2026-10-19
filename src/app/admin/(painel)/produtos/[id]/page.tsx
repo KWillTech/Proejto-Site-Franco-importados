@@ -31,7 +31,8 @@ export default async function EditarProdutoPage({ params }: PageProps<'/admin/pr
   const initial: ProductInput = {
     name: p.name, categoryId: product.data.category_id, description: p.description, badge: p.badge,
     featured: p.featured, available: p.available, pixPercent: p.pixPercent, installments: p.installments,
-    optionNames: p.optionNames, variants: p.variants, images: p.images,
+    optionNames: p.optionNames, images: p.images,
+    variants: p.variants.map((v) => ({ id: v.id, optionValues: v.optionValues, available: v.available })),
   };
 
   return (
