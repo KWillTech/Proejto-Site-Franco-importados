@@ -7,6 +7,7 @@
   padding: 18px 0;
   background: #fff;
   color: var(--navy);
+  overflow-y: auto;
 }
 .menu:popover-open {
   display: flex;
@@ -15,12 +16,46 @@
 .menu::backdrop {
   background: rgba(14, 23, 51, 0.5);
 }
-.menu a {
+.menu a,
+.parent {
   font-weight: 500;
   letter-spacing: 1px;
   line-height: 50px;
   padding: 0 24px;
   border-bottom: 0.8px solid rgba(14, 23, 51, 0.2);
+}
+.parent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin: 0;
+  border: 0;
+  border-bottom: 0.8px solid rgba(14, 23, 51, 0.2);
+  background: none;
+  color: inherit;
+  font: inherit;
+  line-height: 50px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+}
+.parent svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  transition: transform 0.2s;
+}
+.parent[aria-expanded='true'] svg {
+  transform: rotate(180deg);
+}
+.subs {
+  display: flex;
+  flex-direction: column;
+  background: #f6f7fa;
+}
+.subs[hidden] {
+  display: none;
 }
 .menu a.sub {
   padding-left: 44px;
