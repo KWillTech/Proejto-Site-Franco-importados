@@ -20,7 +20,8 @@ export async function saveCosts(input: unknown): Promise<Result> {
   const { data: s, error: sError } = await supabase.from('settings').select('usd_rate').eq('id', 1).single();
   if (sError) return SAVE_FAILED;
   // Sem cotação ainda: busca agora para o dono não esperar o primeiro cron.
-  if (s.usd_rate === null) await refreshUsdRate(supabase);
+  if (s.usd_rate === null && (await refreshUsdRate(supabase)) === null)
+    return { ok: false, errors: { form: 'Custos salvos, mas a cotação do dólar não carregou. Os produtos ficam fora da vitrine até a cotação chegar. Tente salvar de novo.' } };
   const { error: rpcError } = await supabase.rpc('recalc_prices');
   if (rpcError) return SAVE_FAILED;
   revalidatePath('/', 'layout'); // preços e produtos que entram/saem da vitrine

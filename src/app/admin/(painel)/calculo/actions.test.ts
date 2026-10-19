@@ -61,6 +61,21 @@ describe('saveCosts', () => {
     expect(calls).toEqual(['upsert', 'refresh', 'rpc']);
   });
 
+  it('primeira cotação falha: avisa que os produtos ficam fora da vitrine', async () => {
+    db({ rate: null });
+    refreshUsdRate.mockResolvedValue(null);
+    expect(await saveCosts([{ variantId: ID, costUsdCents: 1, marginCents: 1 }])).toEqual({
+      ok: false,
+      errors: { form: 'Custos salvos, mas a cotação do dólar não carregou. Os produtos ficam fora da vitrine até a cotação chegar. Tente salvar de novo.' },
+    });
+  });
+
+  it('primeira cotação chega: ok', async () => {
+    db({ rate: null });
+    refreshUsdRate.mockResolvedValue(5.4);
+    expect(await saveCosts([{ variantId: ID, costUsdCents: 1, marginCents: 1 }])).toEqual({ ok: true });
+  });
+
   it('com cotação gravada, não busca de novo', async () => {
     db({ rate: 5.42 });
     await saveCosts([{ variantId: ID, costUsdCents: 1, marginCents: 1 }]);
