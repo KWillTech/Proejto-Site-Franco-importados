@@ -25,7 +25,9 @@ export const instant = false;
 
 // Destaques são pré-gerados; os demais produtos renderizam sob demanda.
 export async function generateStaticParams() {
-  return (await getFeaturedProducts()).map((p) => ({ slug: p.slug }));
+  const slugs = (await getFeaturedProducts()).map((p) => ({ slug: p.slug }));
+  // Cache Components exige ≥1 param; o sentinela cai no notFound() da página.
+  return slugs.length ? slugs : [{ slug: 'sem-produto' }];
 }
 
 export default async function ProductPage({ params }: PageProps<'/produto/[slug]'>) {

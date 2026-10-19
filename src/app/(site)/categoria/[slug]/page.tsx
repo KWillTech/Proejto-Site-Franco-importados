@@ -23,7 +23,9 @@ export const instant = false;
 
 // Categorias do menu são pré-geradas; as demais renderizam sob demanda.
 export async function generateStaticParams() {
-  return (await getMenuCategories()).flatMap((c) => [c, ...c.children]).map((c) => ({ slug: c.slug }));
+  const slugs = (await getMenuCategories()).flatMap((c) => [c, ...c.children]).map((c) => ({ slug: c.slug }));
+  // Cache Components exige ≥1 param; o sentinela cai no notFound() da página.
+  return slugs.length ? slugs : [{ slug: 'sem-categoria' }];
 }
 
 async function CategoryContent({ params, searchParams }: PageProps<'/categoria/[slug]'>) {
