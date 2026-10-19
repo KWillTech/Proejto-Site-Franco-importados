@@ -65,62 +65,68 @@ function CategoryDialog({ item, roots, homeUsed, onClose }: {
   const title = id
     ? `Editar ${isSub ? 'subcategoria' : 'categoria'}`
     : isSub ? `Nova subcategoria em ${parentName}` : 'Nova categoria';
-  const err = (key: string) => errors[key] && <p className={styles.error} role="alert">{errors[key]}</p>;
+  const err = (key: string) => errors[key] && <span className={cs.error} role="alert">{errors[key]}</span>;
 
   return (
     <div className={cs.backdrop} onMouseDown={(e) => { if (e.target === e.currentTarget && !pending) onClose(); }}>
       <div className={cs.dialog} role="dialog" aria-modal="true" aria-labelledby="cat-dialog-title">
         <div className={cs.dialogHead}>
-          <h2 id="cat-dialog-title">{title}</h2>
+          <div>
+            <h2 id="cat-dialog-title">{title}</h2>
+            <p>{isSub ? 'Subcategorias aparecem dentro da categoria no menu da loja.' : 'Categorias principais aparecem no menu da loja, nesta ordem.'}</p>
+          </div>
           <button type="button" className={cs.close} onClick={onClose} disabled={pending} aria-label="Fechar">×</button>
         </div>
-        <form className={styles.form} onSubmit={submit} noValidate>
-          <label>
-            Nome
-            <input value={name} onChange={(e) => setName(e.target.value)} autoFocus placeholder={isSub ? 'Ex.: Celulares' : 'Ex.: Apple'} />
-            {err('name')}
-          </label>
-          {isSub && id && (
-            <label>
-              Fica dentro de
-              <select value={parentId} onChange={(e) => setParentId(e.target.value)}>
-                {roots.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-              {err('parentId')}
+        <form className={cs.form} onSubmit={submit} noValidate>
+          <div className={isSub && id ? cs.fields2 : cs.fields}>
+            <label className={cs.field}>
+              <span className={cs.label}>Nome</span>
+              <input className={cs.input} value={name} onChange={(e) => setName(e.target.value)} autoFocus placeholder={isSub ? 'Ex.: Celulares' : 'Ex.: Apple'} />
+              {err('name')}
             </label>
-          )}
+            {isSub && id && (
+              <label className={cs.field}>
+                <span className={cs.label}>Fica dentro de</span>
+                <select className={cs.input} value={parentId} onChange={(e) => setParentId(e.target.value)}>
+                  {roots.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+                {err('parentId')}
+              </label>
+            )}
+          </div>
           {isSub && !id && err('parentId')}
-          <label className={styles.check}>
-            <input type="checkbox" checked={visible} onChange={(e) => setVisible(e.target.checked)} />
-            Aparece no menu da loja
+          <label className={cs.switchRow}>
+            <input type="checkbox" className={cs.switch} checked={visible} onChange={(e) => setVisible(e.target.checked)} />
+            <span><strong>Aparece no menu da loja</strong><small>Desligado, a categoria some do menu, mas os produtos continuam salvos.</small></span>
           </label>
           {(!isSub || item.homeCard) && (
             <>
-              <label className={styles.check}>
-                <input type="checkbox" checked={homeCard} disabled={homeFull} onChange={(e) => setHomeCard(e.target.checked)} />
-                Mostrar como cartão na página inicial
+              <label className={`${cs.switchRow} ${homeFull ? cs.disabled : ''}`}>
+                <input type="checkbox" className={cs.switch} checked={homeCard} disabled={homeFull} onChange={(e) => setHomeCard(e.target.checked)}
+                  aria-label="Mostrar como cartão na página inicial" />
+                <span><strong>Mostrar como cartão na página inicial</strong>
+                  <small>{homeFull ? `Já há ${HOME_LIMIT} cartões. Desligue um deles para usar este.` : `Até ${HOME_LIMIT} categorias aparecem como cartão.`}</small></span>
               </label>
-              {homeFull && <p className={styles.hint}>Já há {HOME_LIMIT} cartões na página inicial. Desmarque um deles para usar este.</p>}
               {err('homeCard')}
               {homeCard && (
                 <div className={cs.cardFields}>
                   <ImageUploader label="Imagem do cartão" single images={image ? [image] : []} onChange={(l) => setImage(l[0] ?? '')} />
                   {err('homeCardImage')}
-                  <label>
-                    Texto pequeno do cartão (opcional)
-                    <input value={tag} onChange={(e) => setTag(e.target.value)} placeholder="Ex.: ORIGINAIS · LACRADOS" />
-                    <span className={styles.hint}>Não aparece quando a imagem é uma foto pronta (jpg, png ou webp).</span>
+                  <label className={cs.field}>
+                    <span className={cs.label}>Texto pequeno do cartão (opcional)</span>
+                    <input className={cs.input} value={tag} onChange={(e) => setTag(e.target.value)} placeholder="Ex.: ORIGINAIS · LACRADOS" />
+                    <span className={cs.hint}>Não aparece quando a imagem é uma foto pronta (jpg, png ou webp).</span>
                   </label>
                 </div>
               )}
             </>
           )}
-          {err('form')}
+          {errors.form && <p className={cs.formError} role="alert">{errors.form}</p>}
           <div className={cs.dialogActions}>
             {id && <button type="button" className={`${styles.btn} ${styles.danger}`} disabled={pending} onClick={remove}>Excluir</button>}
             <span className={cs.spacer} />
             <button type="button" className={styles.btn} disabled={pending} onClick={onClose}>Cancelar</button>
-            <button type="submit" className={`${styles.btn} ${styles.primary}`} disabled={pending}>{pending ? 'Salvando…' : 'Salvar'}</button>
+            <button type="submit" className={cs.primary} disabled={pending}>{pending ? 'Salvando…' : 'Salvar'}</button>
           </div>
         </form>
       </div>
@@ -158,47 +164,58 @@ export function CategoriesManager({ categories }: { categories: CategoryItem[] }
   );
   const badges = (c: CategoryItem, parentHidden = false) => (
     <>
-      {!c.visible && <span className={cs.badge}>Oculta</span>}
+      {!c.visible && <span className={cs.badge}>Oculta no menu</span>}
       {c.visible && parentHidden && <span className={cs.badge}>Oculta pela categoria</span>}
       {c.homeCard && <span className={`${cs.badge} ${cs.gold}`}>Cartão da home</span>}
     </>
   );
 
   return (
-    <>
-      <div className={cs.top}>
-        <p className={styles.hint}>A ordem daqui é a ordem do menu da loja. Use as setas para mudar.</p>
-        <span className={cs.counter}>Cartões na home: <strong>{homeUsed} de {HOME_LIMIT}</strong></span>
-        <button type="button" className={`${styles.btn} ${styles.primary}`} onClick={() => setEditing(blank(null))}>+ Nova categoria</button>
-      </div>
-      {error && <p className={styles.error} role="alert">{error}</p>}
+    <div className={cs.page}>
+      <header className={cs.intro}>
+        <div>
+          <h1>Categorias</h1>
+          <p>A ordem daqui é a ordem do menu da loja. Use as setas para mudar.</p>
+        </div>
+        <div className={cs.introSide}>
+          <span className={cs.counter}><i className={homeUsed >= HOME_LIMIT ? cs.dotFull : cs.dotOk} />Cartões na home: <strong>{homeUsed} de {HOME_LIMIT}</strong></span>
+          <button type="button" className={cs.primary} onClick={() => setEditing(blank(null))}>+ Nova categoria</button>
+        </div>
+      </header>
+      {error && <p className={cs.formError} role="alert">{error}</p>}
 
-      {tree.length === 0 && <p className={styles.hint}>Nenhuma categoria ainda. Comece por “+ Nova categoria”.</p>}
+      {tree.length === 0 && (
+        <button type="button" className={cs.emptyCard} onClick={() => setEditing(blank(null))}>
+          <strong>Nenhuma categoria ainda</strong><span>Clique para criar a primeira.</span>
+        </button>
+      )}
       <div className={cs.groups}>
-        {tree.map((root) => {
+        {tree.map((root, gi) => {
           const { children, ...c } = root;
           return (
-            <section key={c.id} className={cs.group} aria-label={c.name}>
+            <section key={c.id} className={`${cs.group} ${c.visible ? '' : cs.hidden}`} aria-label={c.name}>
               <div className={cs.groupHead}>
                 {arrows(c)}
+                <span className={cs.pos}>{String(gi + 1).padStart(2, '0')}</span>
                 <div className={cs.name}>
                   <strong>{c.name}</strong>
                   <span className={cs.count}>{children.length === 0 ? 'sem subcategorias' : `${children.length} subcategoria${children.length > 1 ? 's' : ''}`}</span>
                   {badges(c)}
                 </div>
-                <button type="button" className={styles.btn} onClick={() => setEditing(blank(c.id))}>+ Subcategoria</button>
+                <button type="button" className={cs.ghost} onClick={() => setEditing(blank(c.id))}>+ Subcategoria</button>
                 <button type="button" className={styles.btn} onClick={() => setEditing(c)} aria-label={`Editar ${c.name}`}>Editar</button>
               </div>
               {children.length > 0 && (
                 <ul className={cs.subs}>
-                  {children.map((s) => (
-                    <li key={s.id} className={cs.sub}>
-                      {arrows(s)}
+                  {children.map((sub) => (
+                    <li key={sub.id} className={`${cs.sub} ${sub.visible ? '' : cs.hidden}`}>
+                      {arrows(sub)}
+                      <span className={cs.bullet} aria-hidden="true" />
                       <div className={cs.name}>
-                        <span>{s.name}</span>
-                        {badges(s, !c.visible)}
+                        <span>{sub.name}</span>
+                        {badges(sub, !c.visible)}
                       </div>
-                      <button type="button" className={cs.link} onClick={() => setEditing(s)} aria-label={`Editar ${s.name}`}>Editar</button>
+                      <button type="button" className={cs.link} onClick={() => setEditing(sub)} aria-label={`Editar ${sub.name}`}>Editar</button>
                     </li>
                   ))}
                 </ul>
@@ -211,6 +228,6 @@ export function CategoriesManager({ categories }: { categories: CategoryItem[] }
       {editing && (
         <CategoryDialog key={editing.id || `new-${editing.parentId}`} item={editing} roots={roots} homeUsed={homeUsed} onClose={() => setEditing(null)} />
       )}
-    </>
+    </div>
   );
 }

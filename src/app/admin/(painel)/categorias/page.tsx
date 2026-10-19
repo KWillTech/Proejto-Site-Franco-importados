@@ -1,7 +1,6 @@
 import { CategoriesManager } from '@/components/admin/CategoriesManager';
 import { requireUser } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import styles from '../../admin.module.css';
 
 // Painel lê a sessão a cada requisição: bloqueia no servidor em vez de mostrar um esqueleto.
 export const instant = false;
@@ -21,7 +20,6 @@ export default async function CategoriasPage() {
 
   return (
     <>
-      <h1 className={styles.title}>Categorias</h1>
       <CategoriesManager categories={data.map((c) => ({
         id: c.id, name: c.name, parentId: c.parent_id, visible: c.visible, homeCard: c.home_card,
         homeCardImage: c.home_card_image, homeCardTag: c.home_card_tag,
