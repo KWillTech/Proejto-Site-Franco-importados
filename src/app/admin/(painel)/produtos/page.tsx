@@ -6,7 +6,7 @@ import { requireUser } from '@/lib/auth';
 import { fromPrices, mapProduct, PRODUCT_SELECT, type ProductRow } from '@/lib/data';
 import { formatBRL } from '@/lib/pricing';
 import { createClient } from '@/lib/supabase/server';
-import styles from '../../admin.module.css';
+import p from './produtos.module.css';
 import { setAvailable, setFeatured } from './actions';
 
 type Row = ProductRow & { category: { name: string } | null };
@@ -35,50 +35,79 @@ export default async function ProdutosPage({ searchParams }: PageProps<'/admin/p
   const { data, error } = await query.overrideTypes<Row[], { merge: false }>();
   if (error) throw new Error(error.message);
 
+  const total = data.length;
+  const availableCount = data.filter((r) => r.available).length;
+  const featuredCount = data.filter((r) => r.featured).length;
+  const filtered = Boolean(raw || ids);
+
   return (
-    <>
-      <h1 className={styles.title}>Produtos</h1>
-      <div className={styles.toolbar}>
-        <form className={styles.search} action="/admin/produtos">
-          <input key={raw} type="search" name="q" defaultValue={raw} placeholder="Buscar por nome" aria-label="Buscar por nome" />
-          <CategoryFilter key={current} categories={categories} current={current} />
-          <button type="submit" className={styles.btn}>Buscar</button>
-        </form>
-        {(raw || ids) && <Link className={styles.btn} href="/admin/produtos">Limpar filtros</Link>}
-        <Link className={`${styles.btn} ${styles.primary}`} href="/admin/produtos/novo">Novo produto</Link>
+    <div className={p.page}>
+      <header className={p.intro}>
+        <div>
+          <h1>Produtos</h1>
+          <p>Clique no nome para editar. Os interruptores gravam na hora.</p>
+        </div>
+        <Link className={p.primary} href="/admin/produtos/novo">+ Novo produto</Link>
+      </header>
+
+      <div className={p.stats}>
+        <div className={p.stat}><span>{filtered ? 'Encontrados' : 'Produtos'}</span><strong>{total}</strong></div>
+        <div className={p.stat}><span>Disponíveis</span><strong>{availableCount}</strong>
+          <i className={p.barOn} style={{ width: `${total ? (availableCount / total) * 100 : 0}%` }} /></div>
+        <div className={p.stat}><span>Em destaque na home</span><strong className={p.gold}>{featuredCount}</strong></div>
       </div>
-      {data.length === 0 ? (
-        <p>{term || ids ? 'Nenhum produto encontrado.' : 'Nenhum produto cadastrado ainda.'}</p>
-      ) : (
-        <ul className={styles.list}>
-          {data.map((row) => {
-            const p = mapProduct(row);
-            const thumb = p.images[0];
-            // Mesma regra da vitrine: variações esgotadas não entram no "a partir de".
-            const from = fromPrices(p);
-            return (
-              <li className={styles.item} key={p.id}>
-                {thumb ? (
-                  // eslint-disable-next-line @next/next/no-img-element -- fotos do Storage ou SVG de /placeholders
-                  <img className={styles.thumb} src={thumb} alt="" />
-                ) : (
-                  <span className={styles.thumb} />
-                )}
-                <div className={styles.info}>
-                  <Link href={`/admin/produtos/${p.id}`}>{p.name}</Link>
-                  <span className={styles.muted}>
-                    {row.category?.name ?? 'Sem categoria'} · {from ? `a partir de ${formatBRL(from.retailCents)}` : 'variações esgotadas'}
-                  </span>
-                </div>
-                <div className={styles.toggles}>
-                  <Toggle label="Destaque" checked={p.featured} action={setFeatured.bind(null, p.id)} />
-                  <Toggle label="Disponível" checked={p.available} action={setAvailable.bind(null, p.id)} />
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </>
+
+      <section className={p.card}>
+        <form className={p.tools} action="/admin/produtos">
+          <label className={p.search}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="M16 16l4.5 4.5" /></svg>
+            <input key={raw} type="search" name="q" defaultValue={raw} placeholder="Buscar por nome" aria-label="Buscar por nome" />
+          </label>
+          <span className={p.select}><CategoryFilter key={current} categories={categories} current={current} /></span>
+          <button type="submit" className={p.ghost}>Buscar</button>
+          {filtered && <Link className={p.clear} href="/admin/produtos">Limpar filtros</Link>}
+        </form>
+
+        {data.length === 0 ? (
+          <p className={p.empty}>{filtered ? 'Nenhum produto encontrado.' : 'Nenhum produto cadastrado ainda.'}</p>
+        ) : (
+          <ul className={p.list}>
+            {data.map((row) => {
+              const prod = mapProduct(row);
+              const thumb = prod.images[0];
+              // Mesma regra da vitrine: variações esgotadas não entram no "a partir de".
+              const from = fromPrices(prod);
+              const n = prod.variants.length;
+              return (
+                <li className={`${p.item} ${prod.available ? '' : p.off}`} key={prod.id}>
+                  {thumb ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- fotos do Storage ou SVG de /placeholders
+                    <img className={p.thumb} src={thumb} alt="" />
+                  ) : (
+                    <span className={`${p.thumb} ${p.noThumb}`}>sem foto</span>
+                  )}
+                  <div className={p.info}>
+                    <Link className={p.name} href={`/admin/produtos/${prod.id}`}>{prod.name}</Link>
+                    <div className={p.meta}>
+                      <span className={p.cat}>{row.category?.name ?? 'Sem categoria'}</span>
+                      {n > 1 && <span className={p.variants}>{n} variações</span>}
+                      {prod.badge && <span className={p.badge}>{prod.badge}</span>}
+                    </div>
+                  </div>
+                  <div className={p.price}>
+                    {from ? <><small>a partir de</small><b>{formatBRL(from.retailCents)}</b></> : <span className={p.soldOut}>variações esgotadas</span>}
+                  </div>
+                  <div className={p.toggles}>
+                    <Toggle label="Destaque" checked={prod.featured} action={setFeatured.bind(null, prod.id)} />
+                    <Toggle label="Disponível" checked={prod.available} action={setAvailable.bind(null, prod.id)} />
+                  </div>
+                  <Link className={p.edit} href={`/admin/produtos/${prod.id}`} aria-label={`Editar ${prod.name}`}>Editar</Link>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
+    </div>
   );
 }
