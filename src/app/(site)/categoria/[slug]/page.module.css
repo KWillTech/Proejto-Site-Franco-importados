@@ -6,17 +6,22 @@
   margin: 0 0 34px;
 }
 .subs a {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  padding: 10px 26px;
-  border-radius: 40px;
-  border: 0.8px solid var(--navy);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 20px;
+  border-radius: 999px;
+  border: 1px solid #e0e3ea;
   background: #fff;
+  color: #5b6478;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.subs a:hover {
+  border-color: var(--navy);
   color: var(--navy);
 }
 .subs a[aria-current='page'] {
+  border-color: var(--navy);
   background: var(--navy);
   color: #fff;
+  box-shadow: 0 4px 12px rgba(14, 23, 51, 0.2);
 }
