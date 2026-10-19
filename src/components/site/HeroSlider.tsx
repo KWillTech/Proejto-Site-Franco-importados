@@ -20,11 +20,20 @@ export function HeroSlider({ banners }: { banners: Banner[] }) {
   return (
     <section className={styles.slider} aria-roledescription="carrossel" aria-label="Destaques">
       {banners.map((b, i) => {
+        const loading = i === 0 ? 'eager' : 'lazy';
+        // A imagem aparece inteira (sem corte); a cópia desfocada atrás preenche as sobras
+        // quando a proporção enviada não bate com a da faixa. Mesmo arquivo, baixado uma vez só.
         const pic = (
-          <picture>
-            <source media="(max-width: 767px)" srcSet={b.imageMobile} />
-            <img src={b.imageDesktop} alt={b.alt} loading={i === 0 ? 'eager' : 'lazy'} />
-          </picture>
+          <>
+            <picture className={styles.backdrop}>
+              <source media="(max-width: 767px)" srcSet={b.imageMobile} />
+              <img src={b.imageDesktop} alt="" loading={loading} />
+            </picture>
+            <picture className={styles.main}>
+              <source media="(max-width: 767px)" srcSet={b.imageMobile} />
+              <img src={b.imageDesktop} alt={b.alt} loading={loading} />
+            </picture>
+          </>
         );
         return (
           <div key={b.id} className={`${styles.slide} ${i === cur ? styles.on : ''}`} aria-hidden={i !== cur}>
