@@ -14,6 +14,11 @@ const A = '11111111-1111-4111-8111-111111111111';
 const B = '22222222-2222-4222-8222-222222222222';
 
 describe('CalculoTable', () => {
+  it('mostra o dólar com 2 casas decimais', () => {
+    render(<CalculoTable rows={[row(A, 0, 0)]} rate={5.0502} rateAt={null} />);
+    expect(screen.getByText(/R\$\s*5,05$/)).toBeTruthy();
+  });
+
   it('preço 0 fica fora da vitrine', () => {
     render(<CalculoTable rows={[row(A, 0, 0)]} rate={5} rateAt={null} />);
     expect(screen.getByText('fora da vitrine')).toBeTruthy();

@@ -77,7 +77,7 @@ export function CalculoTable({ rows, rate, rateAt }: { rows: CostRow[]; rate: nu
           <strong>Cotação ainda não carregada</strong>
         ) : (
           <>
-            <strong className={styles.rate}>R$ {rate.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}</strong>
+            <strong className={styles.rate}>R$ {rate.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
             {rateAt && <span className={styles.hint}>Atualizado em {dateTime.format(new Date(rateAt))}</span>}
           </>
         )}
