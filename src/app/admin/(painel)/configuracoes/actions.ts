@@ -13,8 +13,17 @@ export async function saveSettings(input: unknown): Promise<Result> {
   if (!parsed.success) return { ok: false, errors: fieldErrors(parsed.error) };
   const supabase = await createClient();
   const { error } = await supabase.from('settings')
-    .update({ whatsapp_number: parsed.data.whatsappNumber, topbar_text: parsed.data.topbarText }).eq('id', 1);
+    .update({
+      whatsapp_number: parsed.data.whatsappNumber, topbar_text: parsed.data.topbarText,
+      footer_hours: parsed.data.footer.hours, footer_email: parsed.data.footer.email,
+      footer_payment: parsed.data.footer.payment, footer_shipping: parsed.data.footer.shipping,
+      footer_copyright: parsed.data.footer.copyright,
+    }).eq('id', 1);
+  // Coluna do rodapé inexistente: a migração 0006 ainda não rodou no Supabase.
+  if (error?.code === 'PGRST204' || error?.code === '42703') {
+    return { ok: false, errors: { form: 'Falta atualizar o banco (migração 0006_rodape.sql) para salvar o rodapé.' } };
+  }
   if (error) return SAVE_FAILED;
-  revalidatePath('/', 'layout'); // topbar, botão flutuante e carrinho leem as configurações
+  revalidatePath('/', 'layout'); // topbar, rodapé, botão flutuante e carrinho leem as configurações
   return { ok: true };
 }

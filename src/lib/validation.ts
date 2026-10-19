@@ -99,6 +99,13 @@ export const settingsSchema = z.object({
     return n ?? v;
   }),
   topbarText: text.max(80, 'O texto do topo deve ter até 80 caracteres.'),
+  footer: z.object({
+    hours: text.max(160, 'Até 160 caracteres.'),
+    email: text.max(120, 'Até 120 caracteres.').refine((v) => v === '' || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), 'E-mail inválido.'),
+    payment: text.max(160, 'Até 160 caracteres.'),
+    shipping: text.max(160, 'Até 160 caracteres.'),
+    copyright: text.max(160, 'Até 160 caracteres.'),
+  }),
 });
 
 export const categorySchema = z.object({

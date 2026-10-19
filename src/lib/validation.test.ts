@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { bannerSchema, categorySchema, costsSchema, isId, parseMoney, productSchema, settingsSchema, slugify, uniqueSlug, validateImageFile } from './validation';
 
+const FOOTER = { hours: 'h', email: '', payment: 'p', shipping: 's', copyright: 'c' };
+
 const CAT = '0b6c4a2e-1f3d-4c5b-9a8e-7d6f5e4c3b2a';
 const base = {
   name: 'iPhone 17 Pro', categoryId: CAT, description: '', badge: null,
@@ -135,15 +137,15 @@ const msgs = (schema: { safeParse: (v: unknown) => { success: boolean; error?: {
 
 describe('settingsSchema', () => {
   it('grava o número normalizado', () => {
-    const r = settingsSchema.parse({ whatsappNumber: '(62) 99999-0000', topbarText: '' });
-    expect(r).toEqual({ whatsappNumber: '5562999990000', topbarText: '' });
+    const r = settingsSchema.parse({ whatsappNumber: '(62) 99999-0000', topbarText: '', footer: FOOTER });
+    expect(r).toEqual({ whatsappNumber: '5562999990000', topbarText: '', footer: FOOTER });
   });
   it('recusa número sem DDD e texto de topo com mais de 80 caracteres', () => {
-    expect(msgs(settingsSchema, { whatsappNumber: '9999-0000', topbarText: 'x'.repeat(81) })).toEqual({
+    expect(msgs(settingsSchema, { whatsappNumber: '9999-0000', topbarText: 'x'.repeat(81), footer: FOOTER })).toEqual({
       whatsappNumber: 'Informe um número de WhatsApp com DDD.',
       topbarText: 'O texto do topo deve ter até 80 caracteres.',
     });
-    expect(settingsSchema.safeParse({ whatsappNumber: '62999990000', topbarText: 'x'.repeat(80) }).success).toBe(true);
+    expect(settingsSchema.safeParse({ whatsappNumber: '62999990000', topbarText: 'x'.repeat(80), footer: FOOTER }).success).toBe(true);
   });
 });
 

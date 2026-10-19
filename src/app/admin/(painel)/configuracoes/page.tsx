@@ -1,5 +1,6 @@
 import { SettingsForm } from '@/components/admin/SettingsForm';
 import { requireUser } from '@/lib/auth';
+import { mapSettings, type SettingsRow } from '@/lib/settings';
 import { createClient } from '@/lib/supabase/server';
 import styles from '../../admin.module.css';
 
@@ -9,13 +10,14 @@ export const instant = false;
 export default async function ConfiguracoesPage() {
   await requireUser();
   const supabase = await createClient();
-  const { data, error } = await supabase.from('settings').select('whatsapp_number, topbar_text').eq('id', 1).single();
+  const { data, error } = await supabase.from('settings').select('*').eq('id', 1).single();
   if (error) throw new Error(error.message);
+  const s = mapSettings(data as SettingsRow);
 
   return (
     <>
       <h1 className={styles.title}>Configurações</h1>
-      <SettingsForm whatsappNumber={data.whatsapp_number} topbarText={data.topbar_text} />
+      <SettingsForm whatsappNumber={s.whatsappNumber} topbarText={s.topbarText} footer={s.footer} />
     </>
   );
 }
