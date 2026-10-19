@@ -24,6 +24,7 @@ export default function PainelLayout({ children }: LayoutProps<'/admin'>) {
             <Link href="/admin/produtos">Produtos</Link>
             <Link href="/admin/categorias">Categorias</Link>
             <Link href="/admin/banners">Banners</Link>
+            <Link href="/admin/calculo">Cálculo</Link>
             <Link href="/admin/configuracoes">Configurações</Link>
             <form action={signOut}>
               <button type="submit">Sair</button>
