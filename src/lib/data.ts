@@ -22,6 +22,7 @@ export type ProductRow = {
     retail_cents: number;
     wholesale_cents: number;
     available: boolean;
+    priced: boolean;
     position: number;
   }>;
 };
@@ -34,7 +35,7 @@ type CategoryRow = {
 export const PRODUCT_SELECT =
   'id, slug, name, description, featured, available, badge, pix_percent, installments, option_names, ' +
   'categories(slug), product_images(url, position), ' +
-  'variants(id, option_values, retail_cents, wholesale_cents, available, position)';
+  'variants(id, option_values, retail_cents, wholesale_cents, available, priced, position)';
 
 const CATEGORY_SELECT = 'id, name, slug, parent_id, home_card, home_card_image, home_card_tag';
 
@@ -82,6 +83,12 @@ export function mapProduct(row: ProductRow): Product {
   };
 }
 
+// Só a vitrine usa: o painel usa mapProduct e precisa ver as variações sem preço.
+export function forStorefront(row: ProductRow): Product | null {
+  const variants = row.variants.filter((v) => v.priced);
+  return variants.length ? mapProduct({ ...row, variants }) : null;
+}
+
 export function fromPrices(p: Product): { retailCents: number; wholesaleCents: number; hasRange: boolean } | null {
   const open = p.variants.filter((v) => v.available);
   if (open.length === 0) return null;
@@ -105,7 +112,7 @@ function mapCategory(r: CategoryRow): Category {
 }
 
 function mapProducts(rows: unknown): Product[] {
-  return (rows as ProductRow[]).map(mapProduct);
+  return (rows as ProductRow[]).flatMap((r) => forStorefront(r) ?? []);
 }
 
 export async function getSettings(): Promise<Settings> {
@@ -182,11 +189,11 @@ export async function searchProducts(q: string): Promise<Product[]> {
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
   const row = check(await db().from('products').select(PRODUCT_SELECT).eq('slug', slug).maybeSingle());
-  return row ? mapProduct(row as unknown as ProductRow) : null;
+  return row ? forStorefront(row as unknown as ProductRow) : null;
 }
 
 export async function getAllProductSlugs(): Promise<string[]> {
-  return check(await db().from('products').select('slug')).map((r) => r.slug as string);
+  return check(await db().from('products').select('slug, variants!inner(priced)').eq('variants.priced', true)).map((r) => r.slug as string);
 }
 
 export async function getVariantsByIds(ids: string[]): Promise<Array<{ variant: Variant; product: Product }>> {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { mapProduct, fromPrices, isSoldOut, filterBySub, pickHomeCards, type ProductRow } from './data';
+import { mapProduct, forStorefront, fromPrices, isSoldOut, filterBySub, pickHomeCards, type ProductRow } from './data';
 import type { Category, Product, Variant } from './types';
 
 const row = (over: Partial<ProductRow> = {}): ProductRow => ({
@@ -12,8 +12,8 @@ const row = (over: Partial<ProductRow> = {}): ProductRow => ({
     { url: '/a.svg', position: 1 },
   ],
   variants: [
-    { id: 'v2', option_values: ['Preto'], retail_cents: 1100, wholesale_cents: 900, available: true, position: 2 },
-    { id: 'v1', option_values: ['Azul'], retail_cents: 1000, wholesale_cents: 800, available: true, position: 1 },
+    { id: 'v2', option_values: ['Preto'], retail_cents: 1100, wholesale_cents: 900, available: true, priced: true, position: 2 },
+    { id: 'v1', option_values: ['Azul'], retail_cents: 1000, wholesale_cents: 800, available: true, priced: true, position: 1 },
   ],
   ...over,
 });
@@ -36,6 +36,26 @@ describe('mapProduct', () => {
     expect(p.categorySlug).toBe('iphone');
     expect(p.pixPercent).toBe(10);
     expect(p.optionNames).toEqual(['Cor']);
+  });
+});
+
+describe('mapProduct (painel)', () => {
+  it('mantém variação sem preço, porque o painel precisa editá-la', () => {
+    const base = row();
+    const p = mapProduct(row({ variants: [{ ...base.variants[0], priced: false }] }));
+    expect(p.variants.map((x) => x.id)).toEqual(['v2']);
+  });
+});
+
+describe('forStorefront', () => {
+  it('fica só com as variações com preço', () => {
+    const [a, b] = row().variants;
+    const p = forStorefront(row({ variants: [a, { ...b, priced: false }] }));
+    expect(p?.variants.map((x) => x.id)).toEqual(['v2']);
+  });
+  it('devolve null quando nenhuma variação tem preço', () => {
+    const variants = row().variants.map((x) => ({ ...x, priced: false }));
+    expect(forStorefront(row({ variants }))).toBeNull();
   });
 });
 
