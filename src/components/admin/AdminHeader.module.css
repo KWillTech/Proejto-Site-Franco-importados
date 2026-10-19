@@ -1,0 +1,149 @@
+.head {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: saturate(1.4) blur(10px);
+  border-bottom: 1px solid #eef0f4;
+  box-shadow: 0 6px 20px rgba(14, 23, 51, 0.04);
+  color: var(--navy);
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  min-height: 76px;
+  padding: 10px 15px;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: none;
+}
+.brand img {
+  height: 48px;
+  width: auto;
+  display: block;
+}
+.tag {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold);
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: var(--navy);
+}
+.nav {
+  display: flex;
+  gap: 4px;
+  padding: 5px;
+  margin: 0 auto;
+  border-radius: 999px;
+  background: #f1f3f6;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.nav::-webkit-scrollbar {
+  display: none;
+}
+.tab,
+.tabOn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: #5b6478;
+  transition: background 0.15s, color 0.15s;
+}
+.tab:hover {
+  background: #fff;
+  color: var(--navy);
+}
+.tabOn {
+  background: var(--navy);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(14, 23, 51, 0.22);
+}
+.tab svg,
+.tabOn svg {
+  width: 17px;
+  height: 17px;
+  flex: none;
+}
+.tabOn svg {
+  color: var(--gold);
+}
+.side {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+}
+.store {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #5b6478;
+}
+.store:hover {
+  background: #f1f3f6;
+  color: var(--navy);
+}
+.store svg,
+.logout svg {
+  width: 15px;
+  height: 15px;
+}
+.side form {
+  margin: 0;
+}
+.logout {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 1px solid #e0e3ea;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--navy);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.logout:hover {
+  border-color: #b42318;
+  color: #b42318;
+}
+
+@media (max-width: 1100px) {
+  .row {
+    flex-wrap: wrap;
+  }
+  .side {
+    margin-left: auto;
+  }
+  .nav {
+    order: 3;
+    width: 100%;
+    margin: 0;
+  }
+}
+@media (max-width: 600px) {
+  .tag,
+  .store span {
+    display: none;
+  }
+}

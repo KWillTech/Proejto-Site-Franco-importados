@@ -49,9 +49,9 @@ describe('signIn', () => {
     expect(await signIn(null, form('dona@loja.com', 'x'))).toBe('Não foi possível entrar agora. Tente de novo em instantes.');
   });
 
-  it('sucesso vai para /admin/produtos', async () => {
+  it('sucesso vai para /admin/calculo', async () => {
     signInWithPassword.mockResolvedValue({ data: { user: { id: 'u1' } }, error: null });
-    await expect(signIn(null, form(' dona@loja.com ', 'certa'))).rejects.toThrow('NEXT_REDIRECT /admin/produtos');
+    await expect(signIn(null, form(' dona@loja.com ', 'certa'))).rejects.toThrow('NEXT_REDIRECT /admin/calculo');
     expect(signInWithPassword).toHaveBeenCalledWith({ email: 'dona@loja.com', password: 'certa' });
     expect(signOutFn).not.toHaveBeenCalled();
   });

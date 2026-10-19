@@ -4,5 +4,5 @@ import { redirect } from 'next/navigation';
 export const instant = false;
 
 export default function AdminIndex() {
-  redirect('/admin/produtos');
+  redirect('/admin/calculo');
 }

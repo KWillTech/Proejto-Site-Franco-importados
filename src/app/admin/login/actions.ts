@@ -27,7 +27,7 @@ export async function signIn(_prev: string | null, formData: FormData): Promise<
     await supabase.auth.signOut({ scope: 'local' });
     return NO_ACCESS;
   }
-  redirect('/admin/produtos');
+  redirect('/admin/calculo');
 }
 
 export async function signOut() {
