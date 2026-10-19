@@ -32,6 +32,7 @@ describe('refreshUsdRate', () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
     vi.restoreAllMocks();
     eq.mockReset();
     update.mockClear();
@@ -59,6 +60,20 @@ describe('refreshUsdRate', () => {
     api({ USDBRL: { ask: '0' } });
     await refreshUsdRate(supabase);
     expect(vi.mocked(fetch)).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ signal: expect.any(AbortSignal) }));
+  });
+
+  it('com AWESOMEAPI_TOKEN, a busca leva o token na URL', async () => {
+    vi.stubEnv('AWESOMEAPI_TOKEN', 'abc');
+    api({ USDBRL: { ask: '0' } });
+    await refreshUsdRate(supabase);
+    expect(vi.mocked(fetch).mock.calls[0][0]).toMatch(/\?token=abc$/);
+  });
+
+  it('sem AWESOMEAPI_TOKEN, a URL não tem token', async () => {
+    vi.stubEnv('AWESOMEAPI_TOKEN', '');
+    api({ USDBRL: { ask: '0' } });
+    await refreshUsdRate(supabase);
+    expect(vi.mocked(fetch).mock.calls[0][0]).not.toContain('token');
   });
 
   it('HTTP não-ok devolve null', async () => {
