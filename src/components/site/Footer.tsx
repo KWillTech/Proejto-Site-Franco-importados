@@ -1,11 +1,6 @@
 import type { FooterSettings } from '@/lib/types';
+import { displayPhone } from '@/lib/whatsapp';
 import styles from './Footer.module.css';
-
-// 55 + DDD + 9 dígitos vira (DDD) NNNNN-NNNN; outros formatos aparecem como +número.
-function displayPhone(phone: string): string {
-  const m = /^55(\d{2})(\d{5})(\d{4})$/.exec(phone);
-  return m ? `(${m[1]}) ${m[2]}-${m[3]}` : `+${phone}`;
-}
 
 // Textos vêm de Painel → Configurações; campo em branco esconde o bloco.
 export function Footer({ phone, whatsappHref, texts }: {
