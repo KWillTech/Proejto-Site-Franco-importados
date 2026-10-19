@@ -13,6 +13,8 @@ export type CostRow = {
 };
 
 type Entry = { cost: string; margin: string };
+// Variação criada depois do primeiro render (revalidatePath) ainda não tem entrada no estado.
+const EMPTY: Entry = { cost: '', margin: '' };
 
 const toMoney = (cents: number | null) => (cents === null ? '' : (cents / 100).toFixed(2).replace('.', ','));
 const fold = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
@@ -31,16 +33,20 @@ export function CalculoTable({ rows, rate, rateAt }: { rows: CostRow[]; rate: nu
 
   const q = fold(query.trim());
   const visible = q ? rows.filter((r) => fold(r.productName).includes(q)) : rows;
-  const set = (id: string, key: keyof Entry, v: string) => setValues((s) => ({ ...s, [id]: { ...s[id], [key]: v } }));
+  const set = (id: string, key: keyof Entry, v: string) => setValues((s) => ({ ...s, [id]: { ...(s[id] ?? EMPTY), [key]: v } }));
 
   function submit(e: FormEvent) {
     e.preventDefault();
     setOk(false);
-    const changed = rows.filter((r) => values[r.variantId].cost !== saved[r.variantId].cost
-      || values[r.variantId].margin !== saved[r.variantId].margin);
-    const payload = changed.map((r) => ({
-      variantId: r.variantId, costUsdCents: read(values[r.variantId].cost), marginCents: read(values[r.variantId].margin),
-    }));
+    const changed = rows.filter((r) => {
+      const v = values[r.variantId] ?? EMPTY;
+      const s = saved[r.variantId] ?? EMPTY;
+      return v.cost !== s.cost || v.margin !== s.margin;
+    });
+    const payload = changed.map((r) => {
+      const v = values[r.variantId] ?? EMPTY;
+      return { variantId: r.variantId, costUsdCents: read(v.cost), marginCents: read(v.margin) };
+    });
     if (payload.some((p) => p.costUsdCents === undefined || p.marginCents === undefined)) {
       setErrors({ form: 'Corrija os valores inválidos. Use o formato 1.234,56.' });
       return;
@@ -86,10 +92,11 @@ export function CalculoTable({ rows, rate, rateAt }: { rows: CostRow[]; rate: nu
           </thead>
           <tbody>
             {visible.map((r) => {
-              const v = values[r.variantId];
+              const v = values[r.variantId] ?? EMPTY;
               const cost = read(v.cost);
               const margin = read(v.margin);
-              const priced = cost != null && margin != null && rate !== null;
+              const price = cost != null && margin != null && rate !== null ? priceCents(cost, rate, margin) : 0;
+              const priced = price > 0; // mesma regra da recalc_prices (0005)
               const name = `${r.productName} (${r.variantLabel})`;
               return (
                 <tr key={r.variantId} className={priced ? undefined : styles.off}>
@@ -103,7 +110,7 @@ export function CalculoTable({ rows, rate, rateAt }: { rows: CostRow[]; rate: nu
                     <input value={v.margin} onChange={(e) => set(r.variantId, 'margin', e.target.value)} inputMode="decimal"
                       placeholder="sem margem" aria-label={`Margem em reais de ${name}`} aria-invalid={margin === undefined} />
                   </td>
-                  <td>{priced ? <b>{formatBRL(priceCents(cost, rate, margin))}</b> : 'fora da vitrine'}</td>
+                  <td>{priced ? <b>{formatBRL(price)}</b> : 'fora da vitrine'}</td>
                 </tr>
               );
             })}
