@@ -10,7 +10,7 @@ import { LoginForm } from './LoginForm';
 async function LoginGate({ searchParams }: Pick<PageProps<'/admin/login'>, 'searchParams'>) {
   const supabase = await createClient();
   const { data } = await supabase.auth.getUser();
-  if (data.user && (await supabase.rpc('is_admin')).data === true) redirect('/admin/produtos');
+  if (data.user && (await supabase.rpc('is_admin')).data === true) redirect('/admin/calculo');
   const { erro } = await searchParams;
   return <LoginForm initialError={erro === 'sem-acesso' ? NO_ACCESS : null} />;
 }
