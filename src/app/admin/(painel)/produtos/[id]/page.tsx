@@ -4,7 +4,6 @@ import { requireUser } from '@/lib/auth';
 import { mapProduct, PRODUCT_SELECT, type ProductRow } from '@/lib/data';
 import { createClient } from '@/lib/supabase/server';
 import { isId, type ProductInput } from '@/lib/validation';
-import styles from '../../../admin.module.css';
 
 type Row = ProductRow & { category_id: string };
 
@@ -36,9 +35,6 @@ export default async function EditarProdutoPage({ params }: PageProps<'/admin/pr
   };
 
   return (
-    <>
-      <h1 className={styles.title}>Editar produto</h1>
-      <ProductForm id={id} categories={categories.data.map((c) => ({ id: c.id, name: c.name, parentId: c.parent_id }))} initial={initial} />
-    </>
+    <ProductForm id={id} categories={categories.data.map((c) => ({ id: c.id, name: c.name, parentId: c.parent_id }))} initial={initial} />
   );
 }
