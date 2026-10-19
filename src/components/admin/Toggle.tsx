@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import styles from '@/app/admin/admin.module.css';
+import t from './Toggle.module.css';
 
 /** Interruptor da lista que grava na hora; volta ao valor anterior se a action falhar. */
 export function Toggle({ label, checked, action }: { label: string; checked: boolean; action: (value: boolean) => Promise<void> }) {
@@ -9,9 +9,10 @@ export function Toggle({ label, checked, action }: { label: string; checked: boo
   const [failed, setFailed] = useState(false);
   const [pending, startTransition] = useTransition();
   return (
-    <label className={styles.check}>
+    <label className={t.toggle}>
       <input
         type="checkbox"
+        className={t.switch}
         checked={on}
         disabled={pending}
         onChange={(e) => {
@@ -28,8 +29,8 @@ export function Toggle({ label, checked, action }: { label: string; checked: boo
           });
         }}
       />
-      {label}
-      {failed && <span className={styles.error} role="alert">Não foi salvo</span>}
+      <span className={on ? t.on : undefined}>{label}</span>
+      {failed && <span className={t.error} role="alert">Não foi salvo</span>}
     </label>
   );
 }
