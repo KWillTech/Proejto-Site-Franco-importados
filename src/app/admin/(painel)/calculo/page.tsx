@@ -1,5 +1,6 @@
 import { CalculoTable, type CostRow } from '@/components/admin/CalculoTable';
 import { requireUser } from '@/lib/auth';
+import { fetchAll } from '@/lib/fetch-all';
 import { createClient } from '@/lib/supabase/server';
 
 type ProductRow = {
@@ -13,19 +14,18 @@ export const instant = false;
 export default async function CalculoPage() {
   await requireUser();
   const supabase = await createClient();
-  // shortcut: sem paginação, trocar se passar de ~2000 variações
   const [products, costs, settings] = await Promise.all([
-    supabase.from('products').select('id, name, option_names, variants(id, option_values, retail_cents, position)')
-      .order('name').overrideTypes<ProductRow[], { merge: false }>(),
-    supabase.from('variant_costs').select('variant_id, cost_usd_cents, margin_cents'),
+    fetchAll((from, to) => supabase.from('products')
+      .select('id, name, option_names, variants(id, option_values, retail_cents, position)')
+      .order('name').order('id').range(from, to).overrideTypes<ProductRow[], { merge: false }>()),
+    fetchAll((from, to) => supabase.from('variant_costs')
+      .select('variant_id, cost_usd_cents, margin_cents').order('variant_id').range(from, to)),
     supabase.from('settings').select('usd_rate, usd_rate_at').eq('id', 1).single(),
   ]);
-  if (products.error) throw new Error(products.error.message);
-  if (costs.error) throw new Error(costs.error.message);
   if (settings.error) throw new Error(settings.error.message);
 
-  const byVariant = new Map(costs.data.map((c) => [c.variant_id as string, c]));
-  const rows: CostRow[] = products.data.flatMap((p) =>
+  const byVariant = new Map(costs.map((c) => [c.variant_id as string, c]));
+  const rows: CostRow[] = products.flatMap((p) =>
     [...p.variants].sort((a, b) => a.position - b.position).map((v) => {
       const c = byVariant.get(v.id);
       return {

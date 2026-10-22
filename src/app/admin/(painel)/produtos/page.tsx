@@ -3,6 +3,7 @@ import { CategoryFilter } from '@/components/admin/CategoryFilter';
 import { Toggle } from '@/components/admin/Toggle';
 import { categoryFilterIds } from '@/lib/categories';
 import { requireUser } from '@/lib/auth';
+import { fetchAll } from '@/lib/fetch-all';
 import { fromPrices, mapProduct, PRODUCT_SELECT, type ProductRow } from '@/lib/data';
 import { formatBRL } from '@/lib/pricing';
 import { createClient } from '@/lib/supabase/server';
@@ -29,11 +30,10 @@ export default async function ProdutosPage({ searchParams }: PageProps<'/admin/p
   const current = ids ? (cat as string) : '';
   let query = supabase.from('products')
     .select(`${PRODUCT_SELECT}, category:categories(name)`)
-    .order('name');
+    .order('name').order('id');
   if (term) query = query.ilike('name', `%${term}%`);
   if (ids) query = query.in('category_id', ids);
-  const { data, error } = await query.overrideTypes<Row[], { merge: false }>();
-  if (error) throw new Error(error.message);
+  const data = await fetchAll((from, to) => query.range(from, to).overrideTypes<Row[], { merge: false }>());
 
   const total = data.length;
   const availableCount = data.filter((r) => r.available).length;

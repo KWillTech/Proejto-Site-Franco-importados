@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { fetchAll } from './fetch-all';
 import { buildTree } from './categories';
 import type { Banner, Category, MenuCategory, Product, Settings, Variant } from './types';
 import { mapSettings, type SettingsRow } from './settings';
@@ -193,7 +194,10 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
 }
 
 export async function getAllProductSlugs(): Promise<string[]> {
-  return check(await db().from('products').select('slug, variants!inner(priced)').eq('variants.priced', true)).map((r) => r.slug as string);
+  const client = db();
+  const rows = await fetchAll((from, to) => client.from('products').select('id, slug, variants!inner(priced)')
+    .eq('variants.priced', true).order('id').range(from, to));
+  return rows.map((r) => r.slug as string);
 }
 
 export async function getVariantsByIds(ids: string[]): Promise<Array<{ variant: Variant; product: Product }>> {
