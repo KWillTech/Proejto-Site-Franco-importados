@@ -29,6 +29,15 @@ describe('CalculoTable', () => {
     expect(screen.queryByText('fora da vitrine')).toBeNull();
   });
 
+  it('coluna Custo (R$) recalcula ao digitar e mostra "—" sem custo', () => {
+    render(<CalculoTable rows={[row(A, 300, 200), row(B, null, 0)]} rate={5.25} rateAt={null} />);
+    expect(screen.getByText('R$ 15,75')).toBeTruthy();
+    expect(screen.getByText('—')).toBeTruthy();
+    fireEvent.change(screen.getByLabelText('Custo em dólar de Produto 1 (Único)'), { target: { value: '2,00' } });
+    expect(screen.getByText('R$ 10,50')).toBeTruthy();
+    expect(screen.queryByText('R$ 15,75')).toBeNull();
+  });
+
   it('variação nova vinda do revalidate não quebra a tela nem o envio', () => {
     const { rerender } = render(<CalculoTable rows={[row(A, 100, 0)]} rate={5} rateAt={null} />);
     rerender(<CalculoTable rows={[row(A, 100, 0), row(B, null, null)]} rate={5} rateAt={null} />);

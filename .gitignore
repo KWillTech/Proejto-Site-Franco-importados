@@ -48,3 +48,6 @@ next-env.d.ts
 # playwright
 /test-results/
 /playwright-report/
+
+# importação única da Shopping China
+/scripts/importar/saida/

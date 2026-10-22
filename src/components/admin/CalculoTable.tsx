@@ -130,11 +130,12 @@ export function CalculoTable({ rows, rate, rateAt }: { rows: CostRow[]; rate: nu
         <div className={c.tableWrap}>
           <table className={c.table}>
             <thead>
-              <tr><th>Produto</th><th>Variação</th><th>Custo (US$)</th><th>Margem (R$)</th><th className={c.right}>Preço de venda (R$)</th></tr>
+              <tr><th>Produto</th><th>Variação</th><th>Custo (US$)</th><th>Custo (R$)</th><th>Margem (R$)</th><th className={c.right}>Preço de venda (R$)</th></tr>
             </thead>
             <tbody>
               {visible.map((r) => {
                 const { v, cost, margin, price, priced } = priceOf(r.variantId);
+                const costBrl = cost && rate !== null ? formatBRL(priceCents(cost, rate, 0)) : '—';
                 const name = `${r.productName} (${r.variantLabel})`;
                 return (
                   <tr key={r.variantId} className={isDirty(r.variantId) ? c.changed : undefined}>
@@ -147,6 +148,7 @@ export function CalculoTable({ rows, rate, rateAt }: { rows: CostRow[]; rate: nu
                           placeholder="sem custo" aria-label={`Custo em dólar de ${name}`} aria-invalid={cost === undefined} />
                       </span>
                     </td>
+                    <td>{costBrl}</td>
                     <td>
                       <span className={`${c.money} ${margin === undefined ? c.invalid : ''}`}>
                         <em>R$</em>

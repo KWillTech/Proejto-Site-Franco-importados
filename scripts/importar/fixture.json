@@ -1,0 +1,36 @@
+[
+  {
+    "name": "iPhone 17 Pro (teste importação)",
+    "category_slug": "iphone-celulares",
+    "description_es": "Teléfono de prueba",
+    "description": "Celular de teste da importação",
+    "option_names": ["Cor", "Armazenamento"],
+    "images": ["https://www.shoppingchina.com.py/imagen-que-no-existe.jpg"],
+    "variants": [
+      { "option_values": ["Preto", "256GB"], "cost_usd_cents": 118000, "source_url": "https://www.shoppingchina.com.py/a" },
+      { "option_values": ["Branco", "512GB"], "cost_usd_cents": 135000, "source_url": "https://www.shoppingchina.com.py/b" }
+    ]
+  },
+  {
+    "name": "iPad Air (teste importação)",
+    "category_slug": "iphone-ipad",
+    "description_es": "Tableta de prueba",
+    "description": "",
+    "option_names": [],
+    "images": [],
+    "variants": [
+      { "option_values": [], "cost_usd_cents": 59900, "source_url": "https://www.shoppingchina.com.py/c" }
+    ]
+  },
+  {
+    "name": "Perfume (teste importação)",
+    "category_slug": "perfumes-inexistente",
+    "description_es": "Perfume de prueba",
+    "description": "Perfume de teste",
+    "option_names": [],
+    "images": [],
+    "variants": [
+      { "option_values": [], "cost_usd_cents": 5000, "source_url": "https://www.shoppingchina.com.py/d" }
+    ]
+  }
+]
