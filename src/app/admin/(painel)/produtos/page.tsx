@@ -4,7 +4,7 @@ import { Toggle } from '@/components/admin/Toggle';
 import { categoryFilterIds } from '@/lib/categories';
 import { requireUser } from '@/lib/auth';
 import { fetchAll } from '@/lib/fetch-all';
-import { fromPrices, mapProduct, PRODUCT_SELECT, type ProductRow } from '@/lib/data';
+import { forStorefront, fromPrices, mapProduct, PRODUCT_SELECT, type ProductRow } from '@/lib/data';
 import { formatBRL } from '@/lib/pricing';
 import { createClient } from '@/lib/supabase/server';
 import p from './produtos.module.css';
@@ -75,8 +75,9 @@ export default async function ProdutosPage({ searchParams }: PageProps<'/admin/p
             {data.map((row) => {
               const prod = mapProduct(row);
               const thumb = prod.images[0];
-              // Mesma regra da vitrine: variações esgotadas não entram no "a partir de".
-              const from = fromPrices(prod);
+              // Mesma regra da vitrine: só variações com preço e não esgotadas entram no "a partir de".
+              const priced = forStorefront(row);
+              const from = priced && fromPrices(priced);
               const n = prod.variants.length;
               return (
                 <li className={`${p.item} ${prod.available ? '' : p.off}`} key={prod.id}>
@@ -95,7 +96,7 @@ export default async function ProdutosPage({ searchParams }: PageProps<'/admin/p
                     </div>
                   </div>
                   <div className={p.price}>
-                    {from ? <><small>a partir de</small><b>{formatBRL(from.retailCents)}</b></> : <span className={p.soldOut}>variações esgotadas</span>}
+                    {from ? <><small>a partir de</small><b>{formatBRL(from.retailCents)}</b></> : <span className={p.soldOut}>{priced ? 'variações esgotadas' : 'sem preço'}</span>}
                   </div>
                   <div className={p.toggles}>
                     <Toggle label="Destaque" checked={prod.featured} action={setFeatured.bind(null, prod.id)} />

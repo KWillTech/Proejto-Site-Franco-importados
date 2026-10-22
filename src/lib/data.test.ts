@@ -76,6 +76,20 @@ describe('fromPrices', () => {
   });
 });
 
+describe('"a partir de" do painel (forStorefront + fromPrices)', () => {
+  const [a, b] = row().variants; // v2 = 1100, v1 = 1000
+  const from = (variants: ProductRow['variants']) => {
+    const s = forStorefront(row({ variants }));
+    return s && fromPrices(s);
+  };
+  it('ignora variação sem preço, mesmo com valor antigo mais baixo', () => {
+    expect(from([a, { ...b, priced: false, retail_cents: 100 }])?.retailCents).toBe(1100);
+  });
+  it('é null quando nenhuma tem preço', () => {
+    expect(from([{ ...a, priced: false }, { ...b, priced: false }])).toBeNull();
+  });
+});
+
 describe('isSoldOut', () => {
   it('é true para produto indisponível', () => {
     expect(isSoldOut(prod([v()], { available: false }))).toBe(true);
